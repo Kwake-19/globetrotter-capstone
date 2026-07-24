@@ -1,20 +1,20 @@
-# Use an official lightweight Python runtime as the base image
-FROM python:3.9-slim
+# Use an official lightweight Node.js runtime as the base image
+FROM node:20-slim
 
 # Set a working directory inside the container
-WORKDIR /globetrotter
+WORKDIR /app
 
-# Copy dependency file first to leverage Docker layer caching
-COPY requirements.txt .
+# Copy dependency manifests first to leverage Docker layer caching
+COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN npm ci --omit=dev
 
 # Copy the application source code
 COPY . .
 
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE 4000
 
 # Run the application
-CMD ["python", "app/main.py"]
+CMD ["node", "src/server.js"]

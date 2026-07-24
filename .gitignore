@@ -1,34 +1,26 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-ENV/
-*.egg
-*.egg-info/
-dist/
-build/
-.eggs/
-.pytest_cache/
-.mypy_cache/
-*.pyo
+# Node
+node_modules/
+npm-debug.log*
+coverage/
 
 # Environment variables
 .env
-.env.*
+.env.local
+!.env.example
 
 # Docker
 .dockerignore
 
-# Data files (populated at runtime; keep only .gitkeep)
+# Data files (populated at runtime; keep only the tracked seed)
 data/*.json
+!data/seed.json
 
 # IDE / editor
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# OS
+.DS_Store
+Thumbs.db
