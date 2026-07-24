@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlobeTrotter</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>GlobeTrotter</h1>
+    <div id="authStatus" class="auth-status"></div>
+  </header>
+
+  <main id="app">
+    <section id="sharedView" class="panel hidden">
+      <h2>Shared Itinerary</h2>
+      <div id="sharedContent"></div>
+    </section>
+
+    <section id="mainView">
+      <section id="authPanel" class="panel">
+        <div class="auth-tabs">
+          <button id="showLogin" class="tab-btn active">Log In</button>
+          <button id="showRegister" class="tab-btn">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <input type="text" id="loginUsername" placeholder="Username" required />
+          <input type="password" id="loginPassword" placeholder="Password" required />
+          <button type="submit">Log In</button>
+          <p class="form-message" id="loginMessage"></p>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden">
+          <input type="text" id="registerUsername" placeholder="Username" required />
+          <input type="password" id="registerPassword" placeholder="Password" required />
+          <button type="submit">Register</button>
+          <p class="form-message" id="registerMessage"></p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Places</h2>
+        <div id="placesGrid" class="places-grid"></div>
+      </section>
+
+      <section id="itineraryBuilder" class="panel hidden">
+        <h2>Create an Itinerary</h2>
+        <p class="hint">Select 1-2 destinations above, then fill this in.</p>
+        <form id="itineraryForm">
+          <input type="text" id="itineraryTitle" placeholder="Itinerary title" required />
+          <div class="date-row">
+            <input type="date" id="itineraryStart" />
+            <input type="date" id="itineraryEnd" />
+          </div>
+          <textarea id="itineraryNotes" placeholder="Notes"></textarea>
+          <div id="selectedDestinations" class="selected-destinations">No destinations selected</div>
+          <button type="submit">Create Itinerary</button>
+          <p class="form-message" id="itineraryMessage"></p>
+        </form>
+      </section>
+
+      <section id="myItinerariesPanel" class="panel hidden">
+        <h2>My Itineraries</h2>
+        <div id="myItineraries" class="itinerary-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
