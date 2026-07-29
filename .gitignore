@@ -1,26 +1,9 @@
-# Node
 node_modules/
+.env
 npm-debug.log*
 coverage/
-
-# Environment variables
-.env
-.env.local
-!.env.example
-
-# Docker
-.dockerignore
-
-# Data files (populated at runtime; keep only the tracked seed)
-data/*.json
-!data/seed.json
-
-# IDE / editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
+*.log
 .DS_Store
-Thumbs.db
+
+# Keep the seed data in git, but ignore any local runtime backups
+data/db.json.bak
