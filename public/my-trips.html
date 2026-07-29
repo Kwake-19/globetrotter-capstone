@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My trips · GlobeTrotter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header" id="siteHeader"></header>
+
+<main>
+  <div class="container">
+    <div class="page-head">
+      <h1>My trips</h1>
+      <p>Itineraries you've built and saved.</p>
+    </div>
+    <div id="tripsList" class="itinerary-list"></div>
+    <div id="emptyState" class="empty-state hidden">
+      You haven't saved any trips yet. <a href="/trip-builder.html">Build one</a>.
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer" id="siteFooter"></footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/my-trips.js"></script>
+</body>
+</html>
