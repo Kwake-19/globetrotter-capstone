@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Profile · GlobeTrotter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header" id="siteHeader"></header>
+
+<main>
+  <div class="container profile-page">
+    <h1>Profile</h1>
+
+    <div class="profile-readonly">
+      <div><b>Email:</b> <span id="profileEmail"></span></div>
+      <div><b>Username:</b> <span id="profileUsername"></span></div>
+    </div>
+
+    <div id="formError" class="form-error hidden"></div>
+    <div id="formSuccess" class="form-success hidden">Profile updated.</div>
+
+    <form id="profileForm" class="auth-form" novalidate>
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" required />
+        <div class="field__error" id="nameError"></div>
+      </div>
+      <div class="field">
+        <label for="phone">Phone number</label>
+        <input type="tel" id="phone" />
+      </div>
+      <div class="field">
+        <label for="homeCity">Home city / neighborhood</label>
+        <input type="text" id="homeCity" />
+      </div>
+      <button type="submit" class="btn btn-primary" id="submitBtn">Save changes</button>
+    </form>
+  </div>
+</main>
+
+<footer class="site-footer" id="siteFooter"></footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/profile.js"></script>
+</body>
+</html>
