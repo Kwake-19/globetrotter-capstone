@@ -1,12 +1,17 @@
-version: "3.9"
-
 services:
-  globetrotter:
+  api:
     build: .
-    container_name: globetrotter_app
+    container_name: globetrotter-api
     ports:
-      - "4000:4000"
-    env_file:
-      - .env
+      - "4001:4000"
     environment:
       - PORT=4000
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
+      - JWT_EXPIRES_IN=7d
+      - DB_FILE=./data/db.json
+      - CORS_ORIGIN=*
+    volumes:
+      # Bind-mount the data folder so the JSON "database" persists on your
+      # machine across container restarts/rebuilds instead of resetting.
+      - ./data:/usr/src/app/data
+    restart: unless-stopped
