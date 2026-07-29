@@ -1,0 +1,539 @@
+{
+  "users": [],
+  "destinations": [
+    {
+      "id": "dest-001",
+      "name": "Seven Hills",
+      "category": "restaurant",
+      "neighborhood": "Elig-Essono",
+      "description": "Relaxed restaurant near Carrefour PJ known for pizza, burgers and a cozy dining room.",
+      "address": "Carrefour PJ, Elig-Essono, Yaounde",
+      "latitude": 3.870794,
+      "longitude": 11.523396,
+      "rating": 4.2,
+      "priceLevel": 2,
+      "tags": [
+        "pizza",
+        "burgers",
+        "date-night"
+      ],
+      "image": "/assets/images/seven-hills.jpg",
+      "placeId": "ChIJsY7_jGDPixAR1GBuVib5iXc",
+      "googleRating": 4.2,
+      "localImagePath": "/images/places/dest-001.jpg"
+    },
+    {
+      "id": "dest-002",
+      "name": "The Famous",
+      "category": "restaurant",
+      "neighborhood": "Bastos",
+      "description": "One of Yaounde's best-known restaurants, with an elegant setting and a wide international menu including sushi.",
+      "address": "Yaounde",
+      "latitude": 3.892742,
+      "longitude": 11.51819,
+      "rating": 4.1,
+      "priceLevel": 3,
+      "tags": [
+        "fine-dining",
+        "sushi",
+        "groups"
+      ],
+      "placeId": "ChIJiVIvo8jPixARGqQsoqR3hsU",
+      "googleRating": 4.1,
+      "localImagePath": "/images/places/dest-002.jpg"
+    },
+    {
+      "id": "dest-003",
+      "name": "La Cantine",
+      "category": "restaurant",
+      "neighborhood": "Hippodrome",
+      "description": "Casual bar-restaurant with outdoor seating, foosball and grilled favourites - a good afterwork spot.",
+      "address": "2eme rue Hippodrome, Yaounde",
+      "latitude": 3.871051,
+      "longitude": 11.519974,
+      "rating": 4.3,
+      "priceLevel": 2,
+      "tags": [
+        "afterwork",
+        "grill",
+        "outdoor"
+      ],
+      "placeId": "ChIJ9XHluVbPixARnp9sMZI0GUI",
+      "googleRating": 4.3,
+      "localImagePath": "/images/places/dest-003.jpg"
+    },
+    {
+      "id": "dest-004",
+      "name": "The Rooftop Yaounde",
+      "category": "restaurant",
+      "neighborhood": "Centre-ville",
+      "description": "Rooftop bar and restaurant with panoramic city views, DJ nights and a lively evening crowd.",
+      "address": "Rue Joseph Mballa Eloumden, Yaounde",
+      "latitude": 3.881818,
+      "longitude": 11.523438,
+      "rating": 4.1,
+      "priceLevel": 2,
+      "tags": [
+        "rooftop",
+        "nightlife",
+        "views"
+      ],
+      "placeId": "ChIJDy__7rLPixARMnSrVM-RFWY",
+      "googleRating": 4.1,
+      "localImagePath": "/images/places/dest-004.jpg"
+    },
+    {
+      "id": "dest-005",
+      "name": "Cosy Pool",
+      "category": "restaurant",
+      "neighborhood": "Yaounde",
+      "description": "Quiet French restaurant set around a pool, popular for a calm evening meal.",
+      "address": "1866 Rue 1.770, Yaounde",
+      "latitude": 3.886624,
+      "longitude": 11.511958,
+      "rating": 4,
+      "priceLevel": 3,
+      "tags": [
+        "french",
+        "romantic",
+        "quiet"
+      ],
+      "placeId": "ChIJNyM8QGjPixAR5pKOxKPfRAs",
+      "googleRating": 4,
+      "localImagePath": "/images/places/dest-005.jpg"
+    },
+    {
+      "id": "dest-006",
+      "name": "Ci Gusta Cameroon",
+      "category": "ice_cream",
+      "neighborhood": "Bastos",
+      "description": "Family-friendly ice cream and dessert spot at Carrefour Bastos with a shaded patio.",
+      "address": "Carrefour Bastos, Yaounde",
+      "latitude": 3.892696,
+      "longitude": 11.511995,
+      "rating": 3.8,
+      "priceLevel": 2,
+      "tags": [
+        "family-friendly",
+        "dessert",
+        "patio"
+      ],
+      "placeId": "ChIJ9e8LwYXFixAR9HyQx6sFODE",
+      "googleRating": 3.8,
+      "localImagePath": "/images/places/dest-006.jpg"
+    },
+    {
+      "id": "dest-007",
+      "name": "Cold Stone Creamery Bastos",
+      "category": "ice_cream",
+      "neighborhood": "Bastos",
+      "description": "Build-your-own ice cream combinations inside the Spar shopping centre.",
+      "address": "Nouvelle Route Bastos, Yaounde",
+      "latitude": 3.881696,
+      "longitude": 11.513391,
+      "rating": 3.9,
+      "priceLevel": 2,
+      "tags": [
+        "custom-flavors",
+        "mall",
+        "family-friendly"
+      ],
+      "placeId": "ChIJmyIbSQDPixAR1m2PKqK4nwk",
+      "googleRating": 3.9,
+      "localImagePath": "/images/places/dest-007.jpg"
+    },
+    {
+      "id": "dest-008",
+      "name": "Crepino Coffee Shop",
+      "category": "ice_cream",
+      "neighborhood": "Warda",
+      "description": "Cafe and dessert shop inside PlaYce mall, known for cheesecake, crepes and iced coffee.",
+      "address": "Rue Zogofouda Ngono, Yaounde",
+      "latitude": 3.875737,
+      "longitude": 11.513057,
+      "rating": 3.8,
+      "priceLevel": 2,
+      "tags": [
+        "coffee",
+        "crepes",
+        "mall"
+      ],
+      "placeId": "ChIJFcRmxcDPixARXotRYoZpTdI",
+      "googleRating": 3.8,
+      "localImagePath": "/images/places/dest-008.jpg"
+    },
+    {
+      "id": "dest-009",
+      "name": "Mister Crepe & ED Ice Cream",
+      "category": "ice_cream",
+      "neighborhood": "Universite",
+      "description": "Small neighbourhood spot near the university medical centre serving crepes and ice cream.",
+      "address": "Route de l'Universite, Yaounde",
+      "latitude": 3.858111,
+      "longitude": 11.50425,
+      "rating": 5,
+      "priceLevel": 1,
+      "tags": [
+        "budget-friendly",
+        "crepes",
+        "student-area"
+      ],
+      "placeId": "ChIJh8czHpPPixARh73Gy8tgzI4",
+      "googleRating": 5
+    },
+    {
+      "id": "dest-010",
+      "name": "PlaYce Yaounde",
+      "category": "mall",
+      "neighborhood": "Warda",
+      "description": "One of the city's most modern malls, with a supermarket, arcade, playground and food court.",
+      "address": "Warda, Yaounde",
+      "latitude": 3.874377,
+      "longitude": 11.512343,
+      "rating": 4.4,
+      "priceLevel": 2,
+      "tags": [
+        "shopping",
+        "family-friendly",
+        "arcade"
+      ],
+      "image": "/assets/images/playce-yaounde.jpg",
+      "placeId": "ChIJjw7DhizPixARu7oLFtwViiw",
+      "googleRating": 4.4,
+      "localImagePath": "/images/places/dest-010.jpg"
+    },
+    {
+      "id": "dest-011",
+      "name": "Mfoundi Mall",
+      "category": "mall",
+      "neighborhood": "Centre-ville",
+      "description": "Large, busy mall near the city centre with affordable prices on a wide variety of goods.",
+      "address": "Yaounde",
+      "latitude": 3.86552,
+      "longitude": 11.523067,
+      "rating": 4.1,
+      "priceLevel": 1,
+      "tags": [
+        "budget-friendly",
+        "shopping"
+      ],
+      "placeId": "ChIJ7Qp9FwHPixARVw0cdQjmDbk",
+      "googleRating": 4.1,
+      "localImagePath": "/images/places/dest-011.jpg"
+    },
+    {
+      "id": "dest-012",
+      "name": "Star Mall",
+      "category": "mall",
+      "neighborhood": "Bastos",
+      "description": "Well-organized shopping centre in Bastos with a grocery store, restaurants upstairs and boutiques.",
+      "address": "Nouvelle Route Bastos, Yaounde",
+      "latitude": 3.882033,
+      "longitude": 11.513551,
+      "rating": 4.4,
+      "priceLevel": 2,
+      "tags": [
+        "shopping",
+        "grocery",
+        "clean"
+      ],
+      "placeId": "ChIJy9GdpmDPixARvOHWftVm-6w",
+      "googleRating": 4.4,
+      "localImagePath": "/images/places/dest-012.jpg"
+    },
+    {
+      "id": "dest-013",
+      "name": "Central Mall Yaounde",
+      "category": "mall",
+      "neighborhood": "Marche Central",
+      "description": "Clean, secure shopping centre near the Central Market.",
+      "address": "Marche Central, Yaounde",
+      "latitude": 3.866964,
+      "longitude": 11.518318,
+      "rating": 5,
+      "priceLevel": 2,
+      "tags": [
+        "shopping",
+        "central"
+      ],
+      "placeId": "ChIJgXMz9hjPixARQIbT8j9iPHI",
+      "googleRating": 5,
+      "localImagePath": "/images/places/dest-013.jpg"
+    },
+    {
+      "id": "dest-014",
+      "name": "Cameroon Reunification Monument",
+      "category": "fun_place",
+      "neighborhood": "Centre-ville",
+      "description": "Iconic hillside monument with a small underground gallery and sweeping views over the city.",
+      "address": "Boulevard de la Reunification, Yaounde",
+      "latitude": 3.85252,
+      "longitude": 11.513417,
+      "rating": 4.1,
+      "priceLevel": 1,
+      "tags": [
+        "landmark",
+        "views",
+        "history"
+      ],
+      "image": "/assets/images/reunification-monument.jpg",
+      "placeId": "ChIJDYwQ-I3PixARbfuvUowvSKM",
+      "googleRating": 4.1,
+      "localImagePath": "/images/places/dest-014.jpg"
+    },
+    {
+      "id": "dest-015",
+      "name": "Blackitude Museum",
+      "category": "fun_place",
+      "neighborhood": "Centre-ville",
+      "description": "Compact museum of masks, sculpture and traditional dress from across Cameroon.",
+      "address": "Yaounde",
+      "latitude": 3.864193,
+      "longitude": 11.518343,
+      "rating": 3.9,
+      "priceLevel": 1,
+      "tags": [
+        "museum",
+        "culture",
+        "indoor"
+      ],
+      "placeId": "ChIJQSjfwoPPixAR7bnhR6xXoI8",
+      "googleRating": 3.9,
+      "localImagePath": "/images/places/dest-015.jpg"
+    },
+    {
+      "id": "dest-016",
+      "name": "Eco Park",
+      "category": "fun_place",
+      "neighborhood": "Yaounde",
+      "description": "Green family park with a small zoo, water features and a relaxed picnic atmosphere.",
+      "address": "Yaounde",
+      "latitude": 3.786719,
+      "longitude": 11.487959,
+      "rating": 3.8,
+      "priceLevel": 2,
+      "tags": [
+        "family-friendly",
+        "outdoors",
+        "picnic"
+      ],
+      "placeId": "ChIJJQe4WPjQixARb4zuy_MCuEI",
+      "googleRating": 3.8,
+      "localImagePath": "/images/places/dest-016.jpg"
+    },
+    {
+      "id": "dest-017",
+      "name": "Municipal Lake",
+      "category": "fun_place",
+      "neighborhood": "Centre-ville",
+      "description": "One of the city's few green, open-air spaces - a popular free spot to relax at sunset.",
+      "address": "Yaounde",
+      "latitude": 3.865962,
+      "longitude": 11.510582,
+      "rating": 3.4,
+      "priceLevel": 1,
+      "tags": [
+        "free",
+        "relaxation",
+        "sunset"
+      ],
+      "placeId": "ChIJheoeqJ3PixARr0rtFN6v8l4",
+      "googleRating": 3.4,
+      "localImagePath": "/images/places/dest-017.jpg"
+    },
+    {
+      "id": "dest-018",
+      "name": "Musee Ethnographique et d'Histoire des Peuples de la Foret d'Afrique Centrale",
+      "category": "fun_place",
+      "neighborhood": "Yaounde",
+      "description": "Guided museum focused on the Fang-Beti and forest peoples of Central Africa.",
+      "address": "Yaounde",
+      "latitude": 3.87147,
+      "longitude": 11.523965,
+      "rating": 4.2,
+      "priceLevel": 2,
+      "tags": [
+        "museum",
+        "guided-tour",
+        "culture"
+      ],
+      "placeId": "ChIJIXKrP37PixAR5SZitaLIPlw",
+      "googleRating": 4.1,
+      "localImagePath": "/images/places/dest-018.jpg"
+    },
+    {
+      "id": "dest-019",
+      "name": "Hilton Yaounde",
+      "category": "hotel",
+      "neighborhood": "Centre-ville",
+      "description": "Long-standing international hotel on Boulevard du 20 Mai with conference facilities, a pool and a central downtown location.",
+      "address": "Boulevard du 20 Mai, Yaounde",
+      "latitude": 3.86646,
+      "longitude": 11.51833,
+      "rating": 4.3,
+      "priceLevel": 4,
+      "tags": [
+        "business",
+        "pool",
+        "central"
+      ],
+      "image": "/assets/images/hilton-yaounde.jpg",
+      "placeId": "ChIJ9f__C4PPixARPCFdQmBylWY",
+      "googleRating": 4.2,
+      "localImagePath": "/images/places/dest-019.jpg"
+    },
+    {
+      "id": "dest-020",
+      "name": "Djeuga Palace Hotel",
+      "category": "hotel",
+      "neighborhood": "Centre-ville",
+      "description": "Well-known Yaounde hotel with a casino, restaurants and event halls, popular for conferences.",
+      "address": "Yaounde",
+      "latitude": 3.868,
+      "longitude": 11.52,
+      "rating": 4,
+      "priceLevel": 3,
+      "tags": [
+        "business",
+        "conference",
+        "casino"
+      ],
+      "placeId": "ChIJL2N2L4LPixARMNI39mBBM7U",
+      "googleRating": 3.9,
+      "localImagePath": "/images/places/dest-020.jpg"
+    },
+    {
+      "id": "dest-021",
+      "name": "Mansel Hotel Yaounde",
+      "category": "hotel",
+      "neighborhood": "Bastos",
+      "description": "Mid-range hotel in the Bastos diplomatic quarter, popular with business travellers and NGO staff.",
+      "address": "Bastos, Yaounde",
+      "latitude": 3.891,
+      "longitude": 11.516,
+      "rating": 4,
+      "priceLevel": 3,
+      "tags": [
+        "business",
+        "quiet",
+        "bastos"
+      ],
+      "placeId": "ChIJ9xaAKQDFixARHXunIks6yRg",
+      "googleRating": 4,
+      "localImagePath": "/images/places/dest-021.jpg"
+    },
+    {
+      "id": "dest-022",
+      "name": "La Falaise Hotel Yaounde",
+      "category": "hotel",
+      "neighborhood": "Nlongkak",
+      "description": "Hillside hotel with panoramic views over the city, a restaurant and a garden terrace.",
+      "address": "Nlongkak, Yaounde",
+      "latitude": 3.876,
+      "longitude": 11.522,
+      "rating": 3.9,
+      "priceLevel": 3,
+      "tags": [
+        "views",
+        "terrace",
+        "quiet"
+      ],
+      "placeId": "ChIJMekCTXjPixARrXO8UMwTZW4",
+      "googleRating": 4,
+      "localImagePath": "/images/places/dest-022.jpg"
+    },
+    {
+      "id": "dest-023",
+      "name": "TotalEnergies Bastos",
+      "category": "petrol_station",
+      "neighborhood": "Bastos",
+      "description": "Fuel station on the main Bastos road with a convenience shop and attended pumps.",
+      "address": "Nouvelle Route Bastos, Yaounde",
+      "latitude": 3.884,
+      "longitude": 11.514,
+      "rating": 4,
+      "priceLevel": 2,
+      "tags": [
+        "fuel",
+        "convenience-shop",
+        "24-hour"
+      ],
+      "placeId": "ChIJr5cg5mjPixARZePIsZQez7I",
+      "googleRating": 4.3,
+      "localImagePath": "/images/places/dest-023.jpg"
+    },
+    {
+      "id": "dest-024",
+      "name": "TotalEnergies Melen",
+      "category": "petrol_station",
+      "neighborhood": "Melen",
+      "description": "Petrol station along the Melen road, a common stop for drivers heading toward the university.",
+      "address": "Melen, Yaounde",
+      "latitude": 3.859,
+      "longitude": 11.499,
+      "rating": 3.9,
+      "priceLevel": 2,
+      "tags": [
+        "fuel",
+        "roadside"
+      ],
+      "placeId": "ChIJBbz-SKHPixARk3d11-K-Mng",
+      "googleRating": 3.7,
+      "localImagePath": "/images/places/dest-024.jpg"
+    },
+    {
+      "id": "dest-025",
+      "name": "Tradex Station Elig-Essono",
+      "category": "petrol_station",
+      "neighborhood": "Elig-Essono",
+      "description": "Cameroon-based fuel retailer with a station serving the Elig-Essono area, including a small mart.",
+      "address": "Elig-Essono, Yaounde",
+      "latitude": 3.878,
+      "longitude": 11.51,
+      "rating": 3.8,
+      "priceLevel": 2,
+      "tags": [
+        "fuel",
+        "mart"
+      ],
+      "placeId": "ChIJn1df4ZTPixARgepCrqsgM14",
+      "googleRating": 3.7,
+      "localImagePath": "/images/places/dest-025.jpg"
+    },
+    {
+      "id": "dest-026",
+      "name": "Ola Energy Ngousso",
+      "category": "petrol_station",
+      "neighborhood": "Ngousso",
+      "description": "Fuel station along the Ngousso road, with attended pumps and a small snack kiosk.",
+      "address": "Ngousso, Yaounde",
+      "latitude": 3.887,
+      "longitude": 11.529,
+      "rating": 3.7,
+      "priceLevel": 2,
+      "tags": [
+        "fuel",
+        "kiosk"
+      ],
+      "placeId": "ChIJc6k0wqrFixAR73Ugxs8FyrM",
+      "localImagePath": "/images/places/dest-026.jpg"
+    }
+  ],
+  "itineraries": [
+    {
+      "id": "cb71057b-b715-4b49-8a3c-6557aa395e4c",
+      "userId": "a09a3f9c-1c59-4603-8f7d-3ca9e224cd45",
+      "title": "res",
+      "items": [
+        {
+          "destinationId": "dest-001",
+          "notes": "",
+          "order": 0
+        }
+      ],
+      "shareId": "240d8afb-1c9b-473b-970b-2e713aec55b7",
+      "createdAt": "2026-07-28T22:49:28.886Z",
+      "updatedAt": "2026-07-28T22:49:28.886Z"
+    }
+  ]
+}
