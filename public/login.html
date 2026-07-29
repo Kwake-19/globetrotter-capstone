@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Log in · GlobeTrotter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header" id="siteHeader"></header>
+
+<main class="auth-page">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Log in</h1>
+      <p class="auth-card__sub">Welcome back — pick up where you left off.</p>
+
+      <div id="formError" class="form-error hidden"></div>
+
+      <form id="loginForm" class="auth-form" novalidate>
+        <div class="field">
+          <label for="identifier">Email or username</label>
+          <input type="text" id="identifier" autocomplete="username" required />
+          <div class="field__error" id="identifierError"></div>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required />
+          <div class="field__error" id="passwordError"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Log in</button>
+      </form>
+    </div>
+    <p class="auth-switch">Don't have an account? <a class="link-btn" href="/signup.html">Sign up</a></p>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/login.js"></script>
+</body>
+</html>
