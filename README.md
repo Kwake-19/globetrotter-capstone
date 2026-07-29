@@ -1,158 +1,182 @@
-# GlobeTrotter – Travel Assistant
+# GlobeTrotter — Phase 1: The Monolith (Yaoundé edition)
 
-GlobeTrotter is a **monolithic Node.js/Express application** that serves as the starting point for a semester-long capstone project.  
-Students build the monolith first, then refactor it into microservices, and finally deploy it to the cloud with resilience patterns using Docker, Kubernetes, and cloud-native tooling.
+A single Node.js/Express server that handles the API and serves the frontend,
+storing data in one JSON file (`data/db.json`) — as required for Phase 1. The
+travel-recommendation twist: instead of generic global destinations, it
+surfaces real restaurants, ice cream/dessert spots, malls, attractions,
+hotels and petrol stations around **Yaoundé, Cameroon**, and lets a user
+save and share day-trip itineraries built from them.
 
----
+## Stack
 
-## Project Structure
+- Node.js + Express (monolith)
+- JSON file storage (`data/db.json`) — no database yet, by design
+- JWT auth (`jsonwebtoken` + `bcryptjs`)
+- Vanilla HTML/CSS/JS frontend (`public/`), multi-page — no build step, no framework
+- Jest + Supertest for testing
+- Docker + docker-compose
 
-```
-.
-├── src/
-│   ├── app.js               # Express app factory (routes, middleware, static hosting)
-│   ├── server.js             # App entry point - loads .env, starts the HTTP server
-│   ├── db.js                 # File-based JSON storage layer
-│   ├── middleware/
-│   │   └── auth.js           # JWT auth middleware
-│   └── routes/
-│       ├── auth.js           # Registration, login
-│       ├── destinations.js   # Destination listing endpoint
-│       └── itineraries.js    # Create / list / share itineraries
-├── public/
-│   ├── index.html            # Frontend shell
-│   ├── app.js                # Places grid, auth forms, itinerary builder, shared view
-│   └── styles.css
-├── data/
-│   ├── seed.json              # Tracked seed destinations
-│   └── db.json                 # Created at runtime from seed.json (gitignored)
-├── tests/                     # Jest + Supertest suite
-├── Dockerfile
-├── docker-compose.yml
-├── package.json
-└── README.md
-```
+## Endpoints
 
----
+| Method | Path                              | Auth?    | Description |
+|--------|-----------------------------------|----------|--------------|
+| POST   | /api/auth/register                | —        | Create an account (`name`, `username`, `email`, `password`, `phone?`, `homeCity?`), returns a JWT |
+| POST   | /api/auth/login                   | —        | Log in with `{ identifier, password }` — `identifier` matches email OR username |
+| GET    | /api/destinations                 | —        | Search/filter places (`?category=`, `?q=`, `?neighborhood=`); each result includes `placeId`/`localImagePath` (`null` until enriched, see [Photos](#photos)) |
+| GET    | /api/destinations/categories      | —        | The 6 category ids/labels |
+| GET    | /api/destinations/:id             | —        | One place |
+| GET    | /api/recommendations              | optional | Personalized if logged in, popular otherwise |
+| POST   | /api/itineraries                  | required | Create an itinerary |
+| GET    | /api/itineraries                  | required | List your itineraries |
+| GET    | /api/itineraries/:id              | required | One of your itineraries |
+| PUT    | /api/itineraries/:id              | required | Update title/items |
+| DELETE | /api/itineraries/:id              | required | Delete |
+| POST   | /api/itineraries/:id/share        | required | Generate a public share link |
+| GET    | /api/shared/:shareId              | —        | View a shared itinerary (no login) |
+| GET    | /api/profile                      | required | Get the current user's profile (no passwordHash) |
+| PUT    | /api/profile                      | required | Update `name`, `phone`, `homeCity` (not email/username/password) |
+| GET    | /api/health                       | —        | Health check (used by Docker) |
 
-## REST API
+### Destination categories
 
-All API routes are namespaced under `/api`. The static frontend is served from `/`.
+`restaurant`, `ice_cream`, `mall`, `fun_place`, `hotel`, `petrol_station`.
 
-| Method | Endpoint                              | Auth required          | Description                                    |
-|--------|----------------------------------------|-------------------------|-------------------------------------------------|
-| GET    | `/api/health`                          | No                       | Health check                                     |
-| POST   | `/api/register`                        | No                       | Register a new user                              |
-| POST   | `/api/login`                           | No                       | Authenticate and receive a JWT token             |
-| GET    | `/api/destinations`                    | No                       | List the destination catalogue                   |
-| POST   | `/api/itineraries`                     | Yes (JWT)                | Create a new itinerary (1-2 destinations)        |
-| GET    | `/api/itineraries`                     | Yes (JWT)                | List all itineraries for the logged-in user      |
-| POST   | `/api/itineraries/:id/share`           | Yes (JWT, owner only)    | Generate a public share link for an itinerary    |
-| GET    | `/api/itineraries/shared/:shareToken`  | No                       | View a shared itinerary without authentication   |
+## Pages
 
-Protected routes expect the header:  
-`Authorization: Bearer <your-token>`
+| Path                          | File                          | Auth?        | Description |
+|--------------------------------|-------------------------------|--------------|--------------|
+| `/`                            | `public/index.html`           | Public       | Marketing landing page |
+| `/login.html`                  | `public/login.html`           | Public       | Log in (email or username) |
+| `/signup.html`                 | `public/signup.html`          | Public       | Create an account |
+| `/app.html`                    | `public/app.html`             | Required     | Browse & search places |
+| `/place.html?id=X`             | `public/place.html`           | —            | Place detail |
+| `/trip-builder.html`           | `public/trip-builder.html`    | Required     | Build/edit an itinerary (`?editId=X` to edit) |
+| `/my-trips.html`               | `public/my-trips.html`        | Required     | List your saved itineraries |
+| `/trip.html?id=X`              | `public/trip.html`            | Required     | One itinerary — share/edit/delete |
+| `/shared.html?shareId=X`       | `public/shared.html`          | Public       | Read-only shared itinerary view |
+| `/profile.html`                | `public/profile.html`         | Required     | Edit account details |
 
-### Example requests
+Pages marked "Required" redirect to `/login.html?redirect=<page>` in JS if
+there's no token in `localStorage`.
 
-```bash
-# Register
-curl -X POST http://localhost:4000/api/register \
-  -H "Content-Type: application/json" \
-  -d '{"username": "alice", "password": "s3cr3t"}'
-
-# Login
-curl -X POST http://localhost:4000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "alice", "password": "s3cr3t"}'
-# Save the returned token: TOKEN=<value from .token field>
-
-# List destinations
-curl http://localhost:4000/api/destinations
-
-# Create an itinerary (destinationIds come from GET /api/destinations)
-curl -X POST http://localhost:4000/api/itineraries \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"title": "Beach Escape", "destinationIds": ["dest-lisbon"], "startDate": "2026-08-01", "endDate": "2026-08-14"}'
-
-# List itineraries
-curl http://localhost:4000/api/itineraries \
-  -H "Authorization: Bearer $TOKEN"
-
-# Share an itinerary
-curl -X POST http://localhost:4000/api/itineraries/<id>/share \
-  -H "Authorization: Bearer $TOKEN"
-
-# View the shared itinerary - no auth required
-curl http://localhost:4000/api/itineraries/shared/<shareToken>
-```
-
----
-
-## Running Locally
-
-### Prerequisites
-- Node.js 18+
-- npm
+## Local setup (no Docker)
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Create your .env file
-cp .env.example .env
-# then set JWT_SECRET, e.g.:
-openssl rand -hex 32
-
-# 3. Start the server
-npm run dev    # nodemon, reloads on change
-npm start      # production
+cp .env.example .env      # then edit JWT_SECRET to any long random string
+npm run dev                # nodemon, restarts on file changes
+# or: npm start
 ```
 
-The app will be available at `http://localhost:4000`.
+Visit `http://localhost:4000`.
 
----
+## Photos
 
-## Tests
+Two ways a destination gets a photo, checked in this order by the frontend:
+
+1. **Google-enriched** (`localImagePath`) — via the optional
+   `scripts/enrich-places.js` script, see below.
+2. **Manually-added** (`image`) — a file dropped straight into
+   `public/assets/images/` and referenced by hand in `data/db.json`; see
+   `public/assets/images/README.md` for the current list.
+
+Destinations with neither field show a plain "no photo yet" placeholder
+instead — the app works fully either way.
+
+### scripts/enrich-places.js (optional)
+
+A manual, one-off script — **not** run by the server, and the server never
+requires it. For each destination missing a `localImagePath`, it looks the
+place up via the Google Places API and:
+
+- Finds its `placeId` (Find Place from Text).
+- Fetches its real Google `rating` (stored as `googleRating`, separate from
+  the hand-entered `rating` field, which is left untouched as a fallback)
+  and one photo reference (Place Details).
+- Downloads that photo to `public/images/places/<destination-id>.jpg`.
+- Writes `placeId`, `googleRating` and `localImagePath` back into
+  `data/db.json`.
+
+Requires a Google Cloud project with the **Places API** enabled and billing
+attached (the free tier easily covers this project's ~26 destinations).
 
 ```bash
-npm test
+# in .env:
+GOOGLE_PLACES_API_KEY=your-key-here
+
+node scripts/enrich-places.js
 ```
 
----
+It's safe to re-run — destinations that already have a `localImagePath` are
+skipped, so re-running only fetches newly added destinations. To regenerate
+a specific photo, delete that destination's `localImagePath` field in
+`data/db.json` and run the script again.
 
-## Running with Docker
+`placeId` also powers the "Open in Google Maps" link shown on every place
+card and detail page (falls back to lat/lng coordinates if `placeId` isn't
+set yet — no API key needed for the link itself, only for the enrichment
+script).
+
+## Testing
+
+Tests use Jest + Supertest. Each test file gets its own temporary copy of
+`data/db.json`, so tests never touch your real data and can run in any order.
 
 ```bash
-# Build and start
+npm test                 # run once
+npm run test:watch       # re-run on change
+npm run test:coverage    # with a coverage report
+```
+
+If you're new to testing: every test follows **Arrange → Act → Assert** —
+set something up, do the thing, check the result. Start by reading
+`tests/health.test.js`, it's the simplest one in the project.
+
+## Docker
+
+```bash
 docker compose up --build
-
-# Stop
-docker compose down
 ```
 
-`GET /api/health` returns `{"status":"ok"}` once the container is up.
+This builds the image, starts the container, maps **host port 4001** to the
+container's port 4000 (so visit `http://localhost:4001`, not 4000 — see
+`docker-compose.yml`), and bind-mounts `./data` so your JSON "database"
+survives rebuilds. Stop with `docker compose down` (or `Ctrl+C` then `docker
+compose down` if run in the foreground).
 
----
+Set a real `JWT_SECRET` for anything beyond local testing:
 
-## Data Storage
+```bash
+JWT_SECRET=$(openssl rand -hex 32) docker compose up --build
+```
 
-Data is persisted in a single flat JSON file, `data/db.json`, created automatically on first boot
-from the tracked seed file `data/seed.json` (destinations only). `data/db.json` is excluded from
-version control via `.gitignore` since it accumulates runtime users and itineraries.
+## Project structure
 
-Storage has no locking, so concurrent writes can race — acceptable for this capstone phase, but
-worth revisiting before the microservices refactor.
+```
+src/
+  app.js                Express app assembly (used directly by tests)
+  server.js             Entry point — loads .env, starts listening
+  middleware/            auth.js, errorHandler.js
+  routes/                auth, destinations, recommendations, itineraries, shared, profile
+  utils/dataStore.js     JSON file read/write with a write queue
+data/db.json             Seed data — 6 categories of real Yaoundé places
+public/
+  index.html, login.html, signup.html, app.html, place.html,
+  trip-builder.html, my-trips.html, trip.html, shared.html, profile.html
+  css/styles.css          Shared stylesheet (white background, red accent)
+  js/api.js               Shared fetch/auth/nav/draft-trip helpers
+  js/<page>.js            One script per page
+  assets/images/          Manually-added destination photos — see Photos above
+  images/places/          Google-enriched destination photos (scripts/enrich-places.js output)
+scripts/enrich-places.js Optional manual script — see Photos above
+tests/                   Jest + Supertest suites
+```
 
----
+## Known Phase 1 limitations (by design)
 
-## Configuration
-
-| Environment Variable | Default        | Description                                              |
-|-----------------------|-----------------|------------------------------------------------------------|
-| `JWT_SECRET`          | none (required) | JWT signing key – the server refuses to start without it |
-| `PORT`                | `4000`           | Port the app listens on                                    |
-| `NODE_ENV`            | `development`    | Runtime environment                                         |
-
-> **Important:** Always set `JWT_SECRET` to a long, random value (e.g. `openssl rand -hex 32`), and never commit `.env` — only `.env.example` is tracked.
+These are the limitations the course wants you to *feel*, not accidents:
+- JSON file storage has no transactions or indexing, and doesn't scale past
+  a handful of concurrent writers.
+- No horizontal scaling — one process, one file.
+- No caching, no message queue, no circuit breakers — that's Phase 4.
+- No containers-behind-a-load-balancer — that's Phase 3.
