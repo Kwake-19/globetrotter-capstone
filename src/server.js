@@ -1,15 +1,14 @@
 require('dotenv').config();
-
-if (!process.env.JWT_SECRET) {
-  console.error('JWT_SECRET is not set. Create a .env file from .env.example before starting the server.');
-  process.exit(1);
-}
-
 const { createApp } = require('./app');
 
-const app = createApp();
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000;
 
-app.listen(port, () => {
-  console.log(`GlobeTrotter server listening on http://localhost:${port}`);
+if (!process.env.JWT_SECRET) {
+  console.warn('[warn] JWT_SECRET is not set - copy .env.example to .env before running in anything but local dev.');
+}
+
+const app = createApp();
+
+app.listen(PORT, () => {
+  console.log(`GlobeTrotter monolith listening on http://localhost:${PORT}`);
 });
