@@ -35,6 +35,7 @@ save and share day-trip itineraries built from them.
 | GET    | /api/shared/:shareId              | —        | View a shared itinerary (no login) |
 | GET    | /api/profile                      | required | Get the current user's profile (no passwordHash) |
 | PUT    | /api/profile                      | required | Update `name`, `phone`, `homeCity` (not email/username/password) |
+| GET    | /api/config                       | —        | Frontend-facing config, currently `{ googleMapsEmbedKey }` — see [Maps](#maps) |
 | GET    | /api/health                       | —        | Health check (used by Docker) |
 
 ### Destination categories
@@ -112,10 +113,29 @@ skipped, so re-running only fetches newly added destinations. To regenerate
 a specific photo, delete that destination's `localImagePath` field in
 `data/db.json` and run the script again.
 
-`placeId` also powers the "Open in Google Maps" link shown on every place
-card and detail page (falls back to lat/lng coordinates if `placeId` isn't
-set yet — no API key needed for the link itself, only for the enrichment
-script).
+## Maps
+
+The place detail page (not cards) shows a "Location" section: an embedded
+Google Map (Maps Embed API, "place" mode — uses `placeId` if the
+destination has one, otherwise falls back to its lat/lng) plus a "Get
+Directions" button that asks the browser for the visitor's location and
+switches the embed to driving directions.
+
+The embed key is never baked into a static JS file — the frontend fetches
+it once from `GET /api/config` (`{ googleMapsEmbedKey }`), which reads it
+server-side from `GOOGLE_MAPS_EMBED_KEY`.
+
+To enable it:
+
+1. Enable the **Maps Embed API** on the same Google Cloud project as
+   Places (see above).
+2. Set `GOOGLE_MAPS_EMBED_KEY=<your key>` in `.env`.
+3. Restrict the key by **HTTP referrer** in Google Cloud Console before
+   using it beyond local dev.
+
+Without a key, the page shows a plain "Map unavailable" placeholder (with
+the place's address as text) instead of a broken iframe — the app works
+fully either way.
 
 ## Testing
 
@@ -157,7 +177,7 @@ src/
   app.js                Express app assembly (used directly by tests)
   server.js             Entry point — loads .env, starts listening
   middleware/            auth.js, errorHandler.js
-  routes/                auth, destinations, recommendations, itineraries, shared, profile
+  routes/                auth, destinations, recommendations, itineraries, shared, profile, config
   utils/dataStore.js     JSON file read/write with a write queue
 data/db.json             Seed data — 6 categories of real Yaoundé places
 public/

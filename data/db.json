@@ -1,5 +1,17 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "5197ed95-88a6-4cca-a5f4-c7e0434b3fb1",
+      "name": "Kwake Arabella Aza",
+      "username": "kwakearabella@gmail.com",
+      "email": "kwakearabella@gmail.com",
+      "phone": "+237673317284",
+      "homeCity": "Yaounde",
+      "passwordHash": "$2a$10$I2PLWBVDYM3fWGLzKqunW.Dq7Wp.YK5BkK5luMNjVRnJcE9YEsViy",
+      "preferredCategories": [],
+      "createdAt": "2026-07-29T13:41:32.835Z"
+    }
+  ],
   "destinations": [
     {
       "id": "dest-001",
@@ -534,6 +546,58 @@
       "shareId": "240d8afb-1c9b-473b-970b-2e713aec55b7",
       "createdAt": "2026-07-28T22:49:28.886Z",
       "updatedAt": "2026-07-28T22:49:28.886Z"
+    },
+    {
+      "id": "719bc0b3-1e35-4104-ba2b-213e153aa7bb",
+      "userId": "5197ed95-88a6-4cca-a5f4-c7e0434b3fb1",
+      "title": "eat",
+      "items": [
+        {
+          "destinationId": "dest-002",
+          "notes": "",
+          "order": 0
+        }
+      ],
+      "shareId": "d23f8947-2163-4448-b9da-939f21c59d9e",
+      "createdAt": "2026-07-29T13:44:46.451Z",
+      "updatedAt": "2026-07-29T13:44:46.451Z"
+    },
+    {
+      "id": "3dcb24e9-7bdd-441a-97eb-f849a5e4c959",
+      "userId": "5197ed95-88a6-4cca-a5f4-c7e0434b3fb1",
+      "title": "tuesday hangout",
+      "items": [
+        {
+          "destinationId": "dest-003",
+          "notes": "",
+          "order": 0,
+          "visited": false
+        },
+        {
+          "destinationId": "dest-007",
+          "notes": "",
+          "order": 1,
+          "visited": false
+        }
+      ],
+      "shareId": "d294cb0f-a7b8-4c0e-ae7d-52e6446da09f",
+      "createdAt": "2026-07-30T05:40:59.815Z",
+      "updatedAt": "2026-07-30T09:20:11.027Z"
+    },
+    {
+      "id": "39c60888-5d66-4ed4-a401-ed27c0ec4af1",
+      "userId": "5197ed95-88a6-4cca-a5f4-c7e0434b3fb1",
+      "title": "have fun",
+      "items": [
+        {
+          "destinationId": "dest-001",
+          "notes": "",
+          "order": 0
+        }
+      ],
+      "shareId": null,
+      "createdAt": "2026-07-30T05:56:51.405Z",
+      "updatedAt": "2026-07-30T05:56:51.405Z"
     }
   ]
 }

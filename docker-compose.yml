@@ -3,13 +3,15 @@ services:
     build: .
     container_name: globetrotter-api
     ports:
-      - "4001:4000"
+      - "4001:4001"
     environment:
-      - PORT=4000
+      - PORT=4001
+      - HOST_PORT=4001
       - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
       - JWT_EXPIRES_IN=7d
       - DB_FILE=./data/db.json
       - CORS_ORIGIN=*
+      - GOOGLE_MAPS_EMBED_KEY=${GOOGLE_MAPS_EMBED_KEY:-}
     volumes:
       # Bind-mount the data folder so the JSON "database" persists on your
       # machine across container restarts/rebuilds instead of resetting.

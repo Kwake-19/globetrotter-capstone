@@ -78,6 +78,83 @@ describe('Itineraries', () => {
     expect(res.body.title).toBe('Updated title');
   });
 
+  it('creates itinerary items as unvisited by default', async () => {
+    const { token } = await registerUser(app);
+    const created = await request(app)
+      .post('/api/itineraries')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Checklist trip', items: [{ destinationId: firstDestinationId }] });
+
+    expect(created.body.items[0].visited).toBe(false);
+  });
+
+  it('marks a stop visited via PATCH', async () => {
+    const { token } = await registerUser(app);
+    const created = await request(app)
+      .post('/api/itineraries')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Checklist trip', items: [{ destinationId: firstDestinationId }] });
+
+    const res = await request(app)
+      .patch(`/api/itineraries/${created.body.id}/items/${firstDestinationId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ visited: true });
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].visited).toBe(true);
+  });
+
+  it('rejects a non-boolean visited value with 400', async () => {
+    const { token } = await registerUser(app);
+    const created = await request(app)
+      .post('/api/itineraries')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Checklist trip', items: [{ destinationId: firstDestinationId }] });
+
+    const res = await request(app)
+      .patch(`/api/itineraries/${created.body.id}/items/${firstDestinationId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ visited: 'yes' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 marking visited on a destination not in the itinerary', async () => {
+    const { token } = await registerUser(app);
+    const created = await request(app)
+      .post('/api/itineraries')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Checklist trip', items: [{ destinationId: firstDestinationId }] });
+
+    const res = await request(app)
+      .patch(`/api/itineraries/${created.body.id}/items/not-in-this-trip`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ visited: true });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('preserves visited status across a PUT that keeps the same stop', async () => {
+    const { token } = await registerUser(app);
+    const created = await request(app)
+      .post('/api/itineraries')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Checklist trip', items: [{ destinationId: firstDestinationId }] });
+
+    await request(app)
+      .patch(`/api/itineraries/${created.body.id}/items/${firstDestinationId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ visited: true });
+
+    const res = await request(app)
+      .put(`/api/itineraries/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Renamed trip', items: [{ destinationId: firstDestinationId }] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].visited).toBe(true);
+  });
+
   it('deletes an itinerary', async () => {
     const { token } = await registerUser(app);
     const created = await request(app)

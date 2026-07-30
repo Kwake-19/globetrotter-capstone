@@ -90,15 +90,6 @@
       onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${className}-fallback',textContent:'Image unavailable'}))" />`;
   }
 
-  // ---- Google Maps link ---------------------------------------------------
-  /** Builds a Google Maps URL for a destination - by placeId if known, else by coordinates. No API key needed for either. */
-  function mapsUrl(place) {
-    if (place.placeId) {
-      return `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(place.placeId)}`;
-    }
-    return `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
-  }
-
   // ---- draft trip (localStorage cart) ---------------------------------------
   function getDraftTrip() {
     try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '[]'); } catch (e) { return []; }
@@ -236,7 +227,6 @@
     logout,
     requireAuthOrRedirect,
     renderPlaceImage,
-    mapsUrl,
     getDraftTrip,
     saveDraftTrip,
     addToDraftTrip,

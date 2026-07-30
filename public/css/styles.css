@@ -408,6 +408,34 @@ a:hover { color: var(--accent); }
 .place-detail__tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
 .place-detail__actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
 
+.map-section { margin-top: 32px; }
+.map-section h2 { font-size: 19px; margin-bottom: 14px; }
+.map-frame {
+  width: 100%;
+  height: 320px;
+  border: none;
+  border-radius: var(--radius);
+  display: block;
+}
+.map-unavailable {
+  width: 100%;
+  min-height: 160px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  gap: 4px;
+}
+.map-unavailable p { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
+.map-unavailable p:first-child { font-weight: 600; color: var(--ink); font-size: 14.5px; }
+.map-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.map-note { font-size: 13px; color: var(--ink-soft); }
+
 /* ---------------------------------------------------------------------- */
 /* Trip builder                                                             */
 /* ---------------------------------------------------------------------- */
@@ -487,6 +515,10 @@ a:hover { color: var(--accent); }
 .stop-row {
   display: flex; align-items: center; gap: 14px;
   border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: #fff;
+  transition: background 0.15s ease;
+}
+.stop-row__checkbox {
+  width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--accent);
 }
 .stop-row__index {
   font-family: var(--font-mono); font-size: 13px; color: var(--accent);
@@ -496,6 +528,8 @@ a:hover { color: var(--accent); }
 .stop-row__body { flex: 1; }
 .stop-row__name { font-weight: 700; font-size: 15px; }
 .stop-row__meta { font-size: 12.5px; color: var(--ink-soft); }
+.stop-row--visited { background: var(--surface); }
+.stop-row--visited .stop-row__name { color: var(--ink-soft); text-decoration: line-through; }
 
 .share-box { display: flex; gap: 8px; margin-top: 12px; max-width: 480px; }
 .share-box input {

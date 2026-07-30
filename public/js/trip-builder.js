@@ -153,11 +153,11 @@
     try {
       if (editId) {
         await GT.api(`/itineraries/${editId}`, { method: 'PUT', body: JSON.stringify({ title, items }) });
-        window.location.href = `/trip.html?id=${editId}`;
+        window.location.href = `/trip.html?id=${editId}&updated=1`;
       } else {
         const created = await GT.api('/itineraries', { method: 'POST', body: JSON.stringify({ title, items }) });
         GT.clearDraftTrip();
-        window.location.href = `/trip.html?id=${created.id}`;
+        window.location.href = `/trip.html?id=${created.id}&saved=1`;
       }
     } catch (err) {
       builderMessage.textContent = err.message;

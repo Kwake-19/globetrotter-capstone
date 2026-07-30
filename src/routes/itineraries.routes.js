@@ -42,7 +42,8 @@ router.post('/', async (req, res, next) => {
       items: items.map((item, index) => ({
         destinationId: item.destinationId,
         notes: item.notes || '',
-        order: index
+        order: index,
+        visited: false
       })),
       shareId: null,
       createdAt: new Date().toISOString(),
@@ -100,14 +101,50 @@ router.put('/:id', async (req, res, next) => {
     if (items !== undefined) {
       const validationError = validateItems(items, db.destinations);
       if (validationError) return res.status(400).json({ error: validationError });
-      itinerary.items = items.map((item, index) => ({
-        destinationId: item.destinationId,
-        notes: item.notes || '',
-        order: index
-      }));
+      // Preserve each stop's visited status across edits (e.g. reordering
+      // in the trip builder) by matching on destinationId - only stops
+      // that are genuinely new to this itinerary start unvisited.
+      const previousByDestId = new Map(itinerary.items.map((i) => [i.destinationId, i]));
+      itinerary.items = items.map((item, index) => {
+        const previous = previousByDestId.get(item.destinationId);
+        return {
+          destinationId: item.destinationId,
+          notes: item.notes || '',
+          order: index,
+          visited: previous ? previous.visited : false
+        };
+      });
     }
     itinerary.updatedAt = new Date().toISOString();
 
+    await writeDB(db);
+    return res.json(itinerary);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// PATCH /api/itineraries/:id/items/:destinationId - mark one stop visited/unvisited
+router.patch('/:id/items/:destinationId', async (req, res, next) => {
+  try {
+    const db = await readDB();
+    const itinerary = db.itineraries.find((it) => it.id === req.params.id);
+    if (!itinerary || itinerary.userId !== req.user.id) {
+      return res.status(404).json({ error: 'Itinerary not found' });
+    }
+
+    const item = itinerary.items.find((i) => i.destinationId === req.params.destinationId);
+    if (!item) {
+      return res.status(404).json({ error: 'That destination is not part of this itinerary' });
+    }
+
+    const { visited } = req.body || {};
+    if (typeof visited !== 'boolean') {
+      return res.status(400).json({ error: 'visited must be a boolean' });
+    }
+
+    item.visited = visited;
+    itinerary.updatedAt = new Date().toISOString();
     await writeDB(db);
     return res.json(itinerary);
   } catch (err) {

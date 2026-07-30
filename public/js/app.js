@@ -30,7 +30,6 @@
           <span class="place-card__rating">★ ${place.rating.toFixed(1)}</span>
           <div style="display:flex; gap:8px;">
             <a class="btn btn-outline btn-sm" href="/place.html?id=${encodeURIComponent(place.id)}">View details</a>
-            <a class="btn btn-outline btn-sm" href="${GT.mapsUrl(place)}" target="_blank" rel="noopener">Open in Google Maps</a>
             <button class="btn btn-primary btn-sm" data-add="${place.id}" data-name="${GT.escapeHtml(place.name)}" data-category="${place.category}" data-neighborhood="${GT.escapeHtml(place.neighborhood)}">Add to trip</button>
           </div>
         </div>

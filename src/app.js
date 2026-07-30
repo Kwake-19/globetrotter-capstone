@@ -9,6 +9,7 @@ const recommendationsRoutes = require('./routes/recommendations.routes');
 const itinerariesRoutes = require('./routes/itineraries.routes');
 const sharedRoutes = require('./routes/shared.routes');
 const profileRoutes = require('./routes/profile.routes');
+const configRoutes = require('./routes/config.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 function createApp() {
@@ -37,6 +38,7 @@ function createApp() {
   app.use('/api/itineraries', itinerariesRoutes);
   app.use('/api/shared', sharedRoutes);
   app.use('/api/profile', profileRoutes);
+  app.use('/api/config', configRoutes);
 
   // Anything under /api that didn't match becomes a JSON 404 instead of HTML.
   app.use('/api', notFound);
