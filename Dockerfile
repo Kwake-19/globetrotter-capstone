@@ -13,11 +13,13 @@ RUN npm install --omit=dev
 COPY . .
 
 ENV NODE_ENV=production
-ENV PORT=4000
-EXPOSE 4000
+ENV PORT=4001
+EXPOSE 4001
 
-# Basic container healthcheck against our /api/health endpoint.
+# Basic container healthcheck against our /api/health endpoint. Reads PORT
+# at container-start time (not build time) so this still works if a host
+# like Render injects its own PORT value.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||4000)+'/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||4001)+'/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 CMD ["node", "src/server.js"]
