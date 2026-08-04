@@ -12,6 +12,7 @@ services:
       - DB_FILE=./data/db.json
       - CORS_ORIGIN=*
       - GOOGLE_MAPS_EMBED_KEY=${GOOGLE_MAPS_EMBED_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
     volumes:
       # Bind-mount the data folder so the JSON "database" persists on your
       # machine across container restarts/rebuilds instead of resetting.

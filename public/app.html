@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Browse places · GlobeTrotter</title>
+<meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -19,9 +20,10 @@
       <h1>Browse Yaoundé</h1>
       <p>Search restaurants, ice cream stops, malls, attractions, hotels and petrol stations.</p>
       <div class="search-row">
-        <input id="searchInput" type="text" placeholder="Search places, e.g. &quot;ice cream&quot; or &quot;Bastos&quot;" />
+        <input id="searchInput" type="text" placeholder="Try &quot;cozy place with good grilled fish&quot; or &quot;budget hotel near Bastos&quot;" />
         <button id="searchBtn" class="btn btn-primary">Search</button>
       </div>
+      <div id="searchUnderstood" class="search-understood hidden"></div>
       <div class="chip-row" id="categoryChips">
         <button class="chip active" data-category="">All</button>
       </div>

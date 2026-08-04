@@ -30,10 +30,17 @@
   }
 
   async function loadSearchResults() {
-    const q = new URLSearchParams();
-    if (searchState.category) q.set('category', searchState.category);
-    if (searchState.query) q.set('q', searchState.query);
-    const data = await GT.api(`/destinations?${q.toString()}`);
+    let data;
+    if (searchState.query) {
+      data = await GT.api(`/search?q=${encodeURIComponent(searchState.query)}`);
+      if (searchState.category) {
+        data = { ...data, results: data.results.filter((p) => p.category === searchState.category) };
+      }
+    } else {
+      const q = new URLSearchParams();
+      if (searchState.category) q.set('category', searchState.category);
+      data = await GT.api(`/destinations?${q.toString()}`);
+    }
 
     const grid = document.getElementById('searchResults');
     grid.innerHTML = '';

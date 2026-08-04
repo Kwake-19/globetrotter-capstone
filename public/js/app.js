@@ -39,10 +39,30 @@
   }
 
   async function loadPlaces() {
-    const params = new URLSearchParams();
-    if (state.category) params.set('category', state.category);
-    if (state.query) params.set('q', state.query);
-    const data = await GT.api(`/destinations?${params.toString()}`);
+    const understoodEl = document.getElementById('searchUnderstood');
+    let data;
+
+    if (state.query) {
+      // Free-text queries go through the natural-language search, which
+      // understands intent (e.g. "cozy place with good grilled fish"),
+      // not just literal substring matches.
+      data = await GT.api(`/search?q=${encodeURIComponent(state.query)}`);
+      if (state.category) {
+        data = { ...data, results: data.results.filter((p) => p.category === state.category) };
+        data.count = data.results.length;
+      }
+      if (understoodEl) {
+        understoodEl.textContent = data.understood
+          ? `Understood as: ${GT.categoryLabel(data.understood.category) || 'any category'}${data.understood.keywords.length ? ' · ' + data.understood.keywords.join(', ') : ''}`
+          : '';
+        understoodEl.classList.toggle('hidden', !data.understood);
+      }
+    } else {
+      const params = new URLSearchParams();
+      if (state.category) params.set('category', state.category);
+      data = await GT.api(`/destinations?${params.toString()}`);
+      if (understoodEl) understoodEl.classList.add('hidden');
+    }
 
     const grid = document.getElementById('placesGrid');
     grid.innerHTML = '';

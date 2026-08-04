@@ -195,6 +195,25 @@ tier](https://www.oracle.com/cloud/free/)) — you SSH in, install Docker, and
 run `docker compose up -d` there instead; ask if you want that path set up
 too.
 
+## SEO
+
+- `public/robots.txt` / `public/sitemap.xml` — allow crawling of the public
+  pages (`/`, `/login.html`, `/signup.html`, `/place.html`, `/shared.html`);
+  disallow the auth-gated ones (`/app.html`, `/trip-builder.html`,
+  `/my-trips.html`, `/trip.html`, `/profile.html`), which also carry a
+  `<meta name="robots" content="noindex, nofollow">` tag directly.
+- `index.html` has a real meta description, Open Graph/Twitter Card tags,
+  and `WebSite` JSON-LD structured data.
+- Every page has a unique `<title>`; the auth pages and place/shared pages
+  have meta descriptions too.
+- **Known limitation**: pages are client-rendered (JS fetches data after
+  load), so `place.html`'s meta tags are generic rather than per-place
+  (e.g. showing the actual restaurant name/photo). Getting real per-place
+  SEO/social-preview metadata would need server-side rendering, which is a
+  bigger architecture change than Phase 1's static-file frontend.
+- `REPLACE-WITH-YOUR-DOMAIN.example` in `index.html`, `robots.txt` and
+  `sitemap.xml` needs updating to your real deployed URL once you have one.
+
 ## Project structure
 
 ```

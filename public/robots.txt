@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /login.html
+Allow: /signup.html
+Allow: /place.html
+Allow: /shared.html
+Disallow: /app.html
+Disallow: /trip-builder.html
+Disallow: /my-trips.html
+Disallow: /trip.html
+Disallow: /profile.html
+Disallow: /api/
+
+Sitemap: https://REPLACE-WITH-YOUR-DOMAIN.example/sitemap.xml
