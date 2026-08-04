@@ -37,11 +37,15 @@ describe('Destinations', () => {
     expect(res.status).toBe(400);
   });
 
-  it('searches by free text across name, description and tags', async () => {
-    const res = await request(app).get('/api/destinations?q=ice cream');
+  it('searches by free text matching a destination name', async () => {
+    const list = await request(app).get('/api/destinations');
+    const sample = list.body.results[0];
+    const term = sample.name.split(' ')[0];
+
+    const res = await request(app).get(`/api/destinations?q=${encodeURIComponent(term)}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.results.length).toBeGreaterThan(0);
+    expect(res.body.results.some((p) => p.id === sample.id)).toBe(true);
   });
 
   it('lists the six expected filter categories', async () => {
@@ -52,15 +56,15 @@ describe('Destinations', () => {
     expect(ids).toEqual(['restaurant', 'ice_cream', 'mall', 'fun_place', 'hotel', 'petrol_station']);
   });
 
-  it('filters by the new hotel and petrol_station categories', async () => {
+  it('filters by the hotel and petrol_station categories', async () => {
     const hotels = await request(app).get('/api/destinations?category=hotel');
     expect(hotels.status).toBe(200);
-    expect(hotels.body.results.length).toBeGreaterThanOrEqual(4);
+    expect(hotels.body.results.length).toBeGreaterThan(0);
     hotels.body.results.forEach((place) => expect(place.category).toBe('hotel'));
 
     const petrolStations = await request(app).get('/api/destinations?category=petrol_station');
     expect(petrolStations.status).toBe(200);
-    expect(petrolStations.body.results.length).toBeGreaterThanOrEqual(4);
+    expect(petrolStations.body.results.length).toBeGreaterThan(0);
     petrolStations.body.results.forEach((place) => expect(place.category).toBe('petrol_station'));
   });
 

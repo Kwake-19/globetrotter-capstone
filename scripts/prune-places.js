@@ -40,6 +40,9 @@ const path = require('path');
 const { readDB, writeDB } = require('../src/utils/dataStore');
 
 const TARGET_TOTAL = process.env.PRUNE_TARGET ? parseInt(process.env.PRUNE_TARGET, 10) : 75;
+// Hard floor, not just a scoring nudge - "best places" means genuinely
+// well-rated, not just the best of a mediocre bunch.
+const MIN_RATING = process.env.PRUNE_MIN_RATING ? parseFloat(process.env.PRUNE_MIN_RATING) : 4.0;
 const SOURCE_FILE = path.join(__dirname, '..', 'data', 'db.backup-before-prune.json');
 const IMAGES_DIR = path.join(__dirname, '..', 'public', 'images', 'places');
 
@@ -74,6 +77,11 @@ function isNameBlocked(name) {
   return NAME_BLOCKLIST_STARTS_WITH.some((word) => normalized === word || normalized.startsWith(`${word} `));
 }
 
+function meetsRatingFloor(destination) {
+  const rating = typeof destination.googleRating === 'number' ? destination.googleRating : destination.rating;
+  return typeof rating === 'number' && rating >= MIN_RATING;
+}
+
 function score(destination) {
   let s = 0;
   if (destination.localImagePath) s += 1000;
@@ -101,8 +109,9 @@ async function main() {
   console.log(`Re-deriving from the full pool of ${pool.length} destinations in ${SOURCE_FILE}`);
 
   const manualIds = new Set(MANUAL_INCLUDE.map((d) => d.id));
-  const survived = pool.filter((d) => !isNameBlocked(d.name) && !manualIds.has(d.id));
-  const blockedCount = pool.length - survived.length - MANUAL_INCLUDE.length;
+  const survived = pool.filter((d) => !isNameBlocked(d.name) && !manualIds.has(d.id) && meetsRatingFloor(d));
+  const belowRatingCount = pool.filter((d) => !manualIds.has(d.id) && !meetsRatingFloor(d)).length;
+  const blockedCount = pool.length - survived.length - MANUAL_INCLUDE.length - belowRatingCount;
 
   const reservedForManual = MANUAL_INCLUDE.length;
   const automatedTarget = Math.max(0, TARGET_TOTAL - reservedForManual);
@@ -148,7 +157,7 @@ async function main() {
     });
   }
 
-  console.log(`\nDropped ${blockedCount} for blocked names, ${survived.length - kept.length} for pruning to target size.`);
+  console.log(`\nDropped ${blockedCount} for blocked names, ${belowRatingCount} below the ${MIN_RATING} rating floor, ${survived.length - kept.length} for pruning to target size.`);
   console.log(`Removed ${deletedFiles} now-orphaned photo files.`);
   console.log(`Final total: ${finalList.length} (${kept.length} automated + ${manualKept.length} manual include)`);
 }

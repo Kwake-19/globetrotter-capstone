@@ -41,7 +41,7 @@ const MIN_USER_RATING_COUNT = 5;
 const SEARCH_PHRASES = {
   restaurant: ['restaurants in Yaounde', 'restaurants Bastos Yaounde', 'restaurants Centre-ville Yaounde'],
   ice_cream: ['ice cream Yaounde', 'dessert shop Yaounde'],
-  mall: ['shopping mall Yaounde', 'supermarket Yaounde'],
+  mall: ['shopping mall Yaounde', 'mall Yaounde'],
   fun_place: ['tourist attractions Yaounde', 'museums Yaounde', 'parks Yaounde'],
   hotel: ['hotels in Yaounde', 'hotels Bastos Yaounde', 'hotels Centre-ville Yaounde'],
   petrol_station: ['petrol station Yaounde', 'gas station Yaounde']
@@ -53,7 +53,9 @@ const CATEGORY_TYPE_WHITELIST = {
   restaurant: ['restaurant', 'meal_takeaway', 'meal_delivery'],
   // Deliberately excludes plain "restaurant" - overlaps too much with the restaurant category.
   ice_cream: ['cafe', 'bakery'],
-  mall: ['shopping_mall', 'department_store', 'supermarket'],
+  // Deliberately excludes "supermarket" and "department_store" - Google
+  // applies those loosely to informal local markets and mini-marts too.
+  mall: ['shopping_mall'],
   fun_place: ['tourist_attraction', 'museum', 'amusement_park', 'zoo', 'art_gallery', 'stadium', 'aquarium'],
   hotel: ['lodging'],
   petrol_station: ['gas_station']
