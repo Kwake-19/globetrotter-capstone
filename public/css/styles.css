@@ -350,6 +350,13 @@ a:hover { color: var(--accent); }
 }
 .ai-badge svg { color: var(--accent); flex-shrink: 0; }
 
+.search-fallback-note {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: -10px 0 18px;
+}
+
 .place-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

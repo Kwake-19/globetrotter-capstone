@@ -38,26 +38,38 @@
     return card;
   }
 
+  const FALLBACK_NOTES = {
+    'category-popular': 'No exact matches - here are some popular options',
+    popular: 'No exact matches - here are some popular places'
+  };
+
   async function loadPlaces() {
     const aiBadgeEl = document.getElementById('aiSearchBadge');
+    const fallbackNoteEl = document.getElementById('searchFallbackNote');
     let data;
 
     if (state.query) {
-      // Free-text queries go through smart-search, which understands
-      // intent (e.g. "cozy place with good grilled fish") via AI when
-      // available, and transparently falls back to plain keyword search
-      // otherwise - either way this call always succeeds.
+      // Free-text queries go through smart-search, which ranks every
+      // place by relevance (AI-parsed + synonym-table signals) rather
+      // than hard-filtering - it always returns something, so this call
+      // never needs a separate "AI failed" error path.
       data = await GT.api(`/destinations/smart-search?q=${encodeURIComponent(state.query)}`);
       if (state.category) {
         data = { ...data, results: data.results.filter((p) => p.category === state.category) };
         data.count = data.results.length;
       }
       if (aiBadgeEl) aiBadgeEl.classList.toggle('hidden', !data.aiParsed);
+      if (fallbackNoteEl) {
+        const note = FALLBACK_NOTES[data.fallback];
+        fallbackNoteEl.textContent = note || '';
+        fallbackNoteEl.classList.toggle('hidden', !note);
+      }
     } else {
       const params = new URLSearchParams();
       if (state.category) params.set('category', state.category);
       data = await GT.api(`/destinations?${params.toString()}`);
       if (aiBadgeEl) aiBadgeEl.classList.add('hidden');
+      if (fallbackNoteEl) fallbackNoteEl.classList.add('hidden');
     }
 
     const grid = document.getElementById('placesGrid');

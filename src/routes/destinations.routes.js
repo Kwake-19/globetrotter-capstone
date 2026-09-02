@@ -1,8 +1,8 @@
 const express = require('express');
 const { readDB } = require('../utils/dataStore');
-const { optionalAuth } = require('../middleware/auth');
 const { parseSearchQuery } = require('../services/aiSearch');
-const { computeCategoryCounts, rankByCategoryAffinity } = require('../utils/personalization');
+const { matchSignals } = require('../services/searchSynonyms');
+const { rankDestinations, scoreDestination } = require('../services/searchRanking');
 
 const router = express.Router();
 
@@ -18,9 +18,8 @@ function toPublicDestination(destination) {
   };
 }
 
-// Plain-text search used by GET /?q= - also reused as the fallback for
-// GET /smart-search when the AI parse fails/times out/is rate-limited, so
-// there's exactly one place this matching logic lives.
+// Plain-text search used by GET /?q= only - smart-search below uses the
+// scored ranking system (src/services/searchRanking.js) instead.
 function filterByPlainText(destinations, q) {
   const term = q.trim().toLowerCase();
   return destinations.filter((d) => (
@@ -64,64 +63,69 @@ router.get('/', async (req, res, next) => {
 });
 
 // GET /api/destinations/smart-search?q=<free text>
-// Uses OpenRouter (if configured) to turn the query into { category,
-// neighborhood, keywords, minRating } filters, then matches that against
-// the real destinations in data/db.json - the AI only ever interprets
-// intent, it never invents results. If the AI call fails, times out, or is
-// rate-limited, this degrades to the exact same plain-text search as
-// GET /api/destinations?q=, so the endpoint never fails outright just
-// because the AI provider is unavailable.
-router.get('/smart-search', optionalAuth, async (req, res, next) => {
+// Uses OpenRouter (if configured) to parse the query into signals, merges
+// in whatever src/services/searchSynonyms.js also matches from the raw
+// text, then scores + ranks every destination against the combined
+// signals (src/services/searchRanking.js) - nothing is hard-filtered out
+// for a partial mismatch, it just scores lower. If the AI is unavailable,
+// the synonym table is the entire signal source (this replaces the old
+// plain-keyword-search fallback). Never returns a true empty result
+// unless the destinations list itself (or the requested category) has
+// nothing in it - see searchRanking.js's fallback behavior.
+router.get('/smart-search', async (req, res, next) => {
   try {
     const q = (req.query.q || '').toString().trim();
     if (!q) {
       return res.status(400).json({ error: 'q is required' });
     }
 
+    console.log(`[smart-search] query: ${JSON.stringify(q)}`);
+
     const db = await readDB();
 
     let aiParsed = true;
-    let filters = null;
-    let results;
+    let aiSignals = null;
 
     try {
-      filters = await parseSearchQuery(q, VALID_CATEGORIES);
-
-      results = db.destinations.filter((d) => {
-        if (filters.category && d.category !== filters.category) return false;
-
-        if (filters.neighborhood
-          && !d.neighborhood.toLowerCase().includes(filters.neighborhood.toLowerCase())) {
-          return false;
-        }
-
-        if (filters.minRating != null && !(d.rating >= filters.minRating)) return false;
-
-        if (filters.keywords.length > 0) {
-          const haystack = [d.name, d.description, ...(d.tags || [])].join(' ').toLowerCase();
-          if (!filters.keywords.every((keyword) => haystack.includes(keyword))) return false;
-        }
-
-        return true;
-      });
+      aiSignals = await parseSearchQuery(q, VALID_CATEGORIES);
+      console.log('[smart-search] AI parsing succeeded:', aiSignals);
     } catch (err) {
       // AI_UNAVAILABLE (missing key, network/timeout error, both models
-      // failed, or the model's response wasn't valid JSON) - fall back to
-      // plain keyword search rather than failing the request.
+      // failed, or the model's response wasn't valid JSON) - the synonym
+      // table becomes the entire signal source below.
+      const reason = err && err.code === 'AI_UNAVAILABLE' ? err.message : `unexpected error: ${err.message}`;
+      console.log(`[smart-search] AI parsing unavailable - reason: ${reason}`);
       aiParsed = false;
-      filters = null;
-      results = filterByPlainText(db.destinations, q);
     }
 
-    // Re-rank using the same "categories from the user's past itineraries"
-    // signal /api/recommendations uses. Guests get an empty categoryCounts,
-    // which makes this reduce to plain rating-descending order.
-    const { categoryCounts } = req.user ? computeCategoryCounts(db, req.user.id) : { categoryCounts: {} };
-    results = rankByCategoryAffinity(results, categoryCounts);
+    const synonymSignals = matchSignals(q);
+    console.log('[smart-search] synonym-table signals:', synonymSignals);
+
+    // Both sources contribute keywords (union, deduped); for a single-value
+    // signal, the AI's value wins whenever it set one - the synonym table
+    // only fills in what the AI left null, and is the entire source when
+    // the AI failed (aiSignals is null, so every "??" falls through to it).
+    const signals = {
+      category: (aiSignals && aiSignals.category) ?? synonymSignals.category,
+      neighborhood: (aiSignals && aiSignals.neighborhood) ?? null,
+      priceLevel: (aiSignals && aiSignals.priceLevel) ?? synonymSignals.priceLevel,
+      minRating: (aiSignals && aiSignals.minRating) ?? synonymSignals.minRating,
+      keywords: [...new Set([...(aiSignals ? aiSignals.keywords : []), ...synonymSignals.keywords])]
+    };
+    console.log('[smart-search] combined signals:', signals);
+
+    const { results, fallback } = rankDestinations(db.destinations, signals);
+
+    console.log(
+      `[smart-search] top ${Math.min(5, results.length)} score(s):`,
+      results.slice(0, 5).map((d) => ({ name: d.name, score: scoreDestination(d, signals) }))
+    );
+    if (fallback) console.log(`[smart-search] fallback: ${fallback}`);
 
     return res.json({
       aiParsed,
-      filters,
+      signals,
+      fallback,
       count: results.length,
       results: results.map(toPublicDestination)
     });

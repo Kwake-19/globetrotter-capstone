@@ -31,13 +31,15 @@ Given a visitor's free-text search query, extract structured search filters from
   "category": ${categoryEnum} | null,
   "neighborhood": string | null,
   "keywords": string[],
-  "minRating": number | null
+  "minRating": number | null,
+  "priceLevel": 1 | 2 | 3 | null
 }
 
 Rules:
 - "category" must be null if the query does not clearly imply one of those categories. Only set it when the query clearly points to a single one of them.
 - "neighborhood" should only be set if the query names a specific area/neighborhood (e.g. "Bastos", "Elig-Essono"). Otherwise it must be null.
-- "keywords" should capture any descriptive terms from the query that are useful for matching against a place's name, description or tags later - amenities, vibe, or price cues (e.g. "wifi", "rooftop", "cozy", "budget", "grilled fish"). Use lowercase single words or short phrases. Use an empty array if there are none.
+- "priceLevel" captures price-tier intent: if the query implies budget/cheap/affordable/inexpensive, set it to 1; mid-range, set it to 2; luxury/upscale/high-end/expensive, set it to 3. If the query gives no price cue, it must be null. Words that imply a price tier (e.g. "budget", "cheap", "affordable", "luxury", "upscale") must ONLY be reflected here, in priceLevel - never also put them in "keywords".
+- "keywords" should capture any OTHER descriptive terms from the query that are useful for matching against a place's name, description or tags later - amenities or vibe words that are not price-related (e.g. "wifi", "rooftop", "cozy", "quiet", "pool", "grilled fish"). Use lowercase single words or short phrases. Use an empty array if there are none.
 - "minRating" should only be set if the query implies the visitor wants highly-rated places (e.g. "best", "top-rated", "highly rated"). Use 4.0 in that case. Otherwise it must be null.
 
 Respond with ONLY the JSON object described above. Do not wrap it in markdown code fences and do not add any other text.`;
@@ -120,7 +122,9 @@ function normalizeParsedFilters(parsed, categories) {
     ? parsed.minRating
     : null;
 
-  return { category, neighborhood, keywords, minRating };
+  const priceLevel = [1, 2, 3].includes(parsed.priceLevel) ? parsed.priceLevel : null;
+
+  return { category, neighborhood, keywords, minRating, priceLevel };
 }
 
 /**
