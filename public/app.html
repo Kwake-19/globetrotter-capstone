@@ -23,7 +23,6 @@
         <input id="searchInput" type="text" placeholder="Try &quot;cozy place with good grilled fish&quot; or &quot;budget hotel near Bastos&quot;" />
         <button id="searchBtn" class="btn btn-primary">Search</button>
       </div>
-      <div id="searchUnderstood" class="search-understood hidden"></div>
       <div class="chip-row" id="categoryChips">
         <button class="chip active" data-category="">All</button>
       </div>
@@ -31,7 +30,15 @@
 
     <div class="results-head">
       <h2 id="resultsTitle">All places</h2>
-      <span id="resultsCount" class="results-count"></span>
+      <span class="results-head__meta">
+        <span id="aiSearchBadge" class="ai-badge hidden" title="This search was understood by AI, with automatic fallback to plain search if it's ever unavailable">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M8 1L9.4 5.6L14 7L9.4 8.4L8 13L6.6 8.4L2 7L6.6 5.6L8 1Z" fill="currentColor"/>
+          </svg>
+          AI-powered search
+        </span>
+        <span id="resultsCount" class="results-count"></span>
+      </span>
     </div>
     <div id="placesGrid" class="place-grid"></div>
     <div id="emptyState" class="empty-state hidden">No places match that search yet.</div>

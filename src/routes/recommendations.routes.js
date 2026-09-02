@@ -1,6 +1,7 @@
 const express = require('express');
 const { readDB } = require('../utils/dataStore');
 const { optionalAuth } = require('../middleware/auth');
+const { computeCategoryCounts, rankByCategoryAffinity } = require('../utils/personalization');
 
 const router = express.Router();
 
@@ -48,10 +49,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       });
     }
 
-    const userItineraries = db.itineraries.filter((it) => it.userId === req.user.id);
-    const visitedIds = new Set(
-      userItineraries.flatMap((it) => it.items.map((item) => item.destinationId))
-    );
+    const { categoryCounts, visitedIds } = computeCategoryCounts(db, req.user.id);
 
     if (visitedIds.size === 0) {
       return res.json({
@@ -60,23 +58,13 @@ router.get('/', optionalAuth, async (req, res, next) => {
       });
     }
 
-    const visitedDestinations = db.destinations.filter((d) => visitedIds.has(d.id));
-    const categoryCounts = {};
-    visitedDestinations.forEach((d) => {
-      categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
-    });
-
     const candidates = db.destinations.filter((d) => !visitedIds.has(d.id));
-    candidates.sort((a, b) => {
-      const scoreA = (categoryCounts[a.category] || 0) * 10 + a.rating;
-      const scoreB = (categoryCounts[b.category] || 0) * 10 + b.rating;
-      return scoreB - scoreA;
-    });
+    const ranked = rankByCategoryAffinity(candidates, categoryCounts);
 
     return res.json({
       personalized: true,
       basedOnCategories: Object.keys(categoryCounts),
-      results: candidates.slice(0, limit)
+      results: ranked.slice(0, limit)
     });
   } catch (err) {
     return next(err);

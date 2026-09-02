@@ -1,5 +1,8 @@
 # GlobeTrotter — Phase 1: The Monolith (Yaoundé edition)
 
+> This is Phase 1. Phase 2 (microservices) lives in [`services/`](services/)
+> — see [README-phase2.md](README-phase2.md).
+
 A single Node.js/Express server that handles the API and serves the frontend,
 storing data in one JSON file (`data/db.json`) — as required for Phase 1. The
 travel-recommendation twist: instead of generic global destinations, it
@@ -23,6 +26,7 @@ save and share day-trip itineraries built from them.
 | POST   | /api/auth/register                | —        | Create an account (`name`, `username`, `email`, `password`, `phone?`, `homeCity?`), returns a JWT |
 | POST   | /api/auth/login                   | —        | Log in with `{ identifier, password }` — `identifier` matches email OR username |
 | GET    | /api/destinations                 | —        | Search/filter places (`?category=`, `?q=`, `?neighborhood=`); each result includes `placeId`/`localImagePath` (`null` until enriched, see [Photos](#photos)) |
+| GET    | /api/destinations/smart-search    | optional | AI-powered natural-language search (`?q=`), see [AI-powered search](#ai-powered-search) |
 | GET    | /api/destinations/categories      | —        | The 6 category ids/labels |
 | GET    | /api/destinations/:id             | —        | One place |
 | GET    | /api/recommendations              | optional | Personalized if logged in, popular otherwise |
@@ -136,6 +140,36 @@ To enable it:
 Without a key, the page shows a plain "Map unavailable" placeholder (with
 the place's address as text) instead of a broken iframe — the app works
 fully either way.
+
+## AI-powered search
+
+The Browse page's free-text search bar (`GET /api/destinations/smart-search?q=`)
+uses an LLM, via [OpenRouter](https://openrouter.ai)'s free tier, to turn a
+query like *"cozy place with good grilled fish"* or *"budget hotel near
+Bastos"* into structured filters (category, neighborhood, keywords,
+minimum rating) before matching it against `data/db.json`. The AI only
+ever interprets intent — it never invents places.
+
+To enable it:
+
+1. Create a free OpenRouter account and generate an API key at
+   [openrouter.ai/keys](https://openrouter.ai/keys) — **no card required**.
+2. Set `OPENROUTER_API_KEY=<your key>` in `.env`. `OPENROUTER_MODEL` and
+   `OPENROUTER_FALLBACK_MODEL` already default to free models in
+   `.env.example` (`meta-llama/llama-3.3-70b-instruct:free` and
+   `openrouter/free`), no need to change them.
+
+Free-tier rate limits are **20 requests/minute** and **50 requests/day**.
+The search bar only calls smart-search on submit (Enter / the Search
+button), never on every keystroke, to stay well within that.
+
+The app degrades gracefully whenever the key is missing, a request times
+out (6s), or the free tier's rate limit is hit: it silently falls back to
+the same plain keyword search used by `GET /api/destinations?q=`, and the
+response's `aiParsed: false` tells the frontend not to show the
+"AI-powered search" badge — so a fallback never looks broken, just plain.
+With no `OPENROUTER_API_KEY` set at all, the app never even makes the
+network call.
 
 ## Testing
 

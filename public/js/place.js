@@ -102,6 +102,7 @@
         <span>${GT.escapeHtml(place.address)}</span>
       </div>
       <p>${GT.escapeHtml(place.description)}</p>
+      ${place.descriptionSource === 'ai-generated' ? '<p class="place-detail__desc-note">Description generated automatically</p>' : ''}
       <div class="place-detail__tags">
         ${(place.tags || []).map((tag) => `<span class="pill">${GT.escapeHtml(tag)}</span>`).join('')}
       </div>

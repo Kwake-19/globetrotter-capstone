@@ -39,29 +39,25 @@
   }
 
   async function loadPlaces() {
-    const understoodEl = document.getElementById('searchUnderstood');
+    const aiBadgeEl = document.getElementById('aiSearchBadge');
     let data;
 
     if (state.query) {
-      // Free-text queries go through the natural-language search, which
-      // understands intent (e.g. "cozy place with good grilled fish"),
-      // not just literal substring matches.
-      data = await GT.api(`/search?q=${encodeURIComponent(state.query)}`);
+      // Free-text queries go through smart-search, which understands
+      // intent (e.g. "cozy place with good grilled fish") via AI when
+      // available, and transparently falls back to plain keyword search
+      // otherwise - either way this call always succeeds.
+      data = await GT.api(`/destinations/smart-search?q=${encodeURIComponent(state.query)}`);
       if (state.category) {
         data = { ...data, results: data.results.filter((p) => p.category === state.category) };
         data.count = data.results.length;
       }
-      if (understoodEl) {
-        understoodEl.textContent = data.understood
-          ? `Understood as: ${GT.categoryLabel(data.understood.category) || 'any category'}${data.understood.keywords.length ? ' · ' + data.understood.keywords.join(', ') : ''}`
-          : '';
-        understoodEl.classList.toggle('hidden', !data.understood);
-      }
+      if (aiBadgeEl) aiBadgeEl.classList.toggle('hidden', !data.aiParsed);
     } else {
       const params = new URLSearchParams();
       if (state.category) params.set('category', state.category);
       data = await GT.api(`/destinations?${params.toString()}`);
-      if (understoodEl) understoodEl.classList.add('hidden');
+      if (aiBadgeEl) aiBadgeEl.classList.add('hidden');
     }
 
     const grid = document.getElementById('placesGrid');
