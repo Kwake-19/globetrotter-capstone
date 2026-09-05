@@ -1,0 +1,23 @@
+const fs = require('fs/promises');
+const path = require('path');
+
+const DB_FILE = path.resolve(process.cwd(), process.env.DB_FILE || './data/db.json');
+
+let writeQueue = Promise.resolve();
+
+async function readDB() {
+  const raw = await fs.readFile(DB_FILE, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function writeDB(data) {
+  writeQueue = writeQueue.then(async () => {
+    const json = JSON.stringify(data, null, 2);
+    const tmpFile = `${DB_FILE}.tmp`;
+    await fs.writeFile(tmpFile, json, 'utf-8');
+    await fs.rename(tmpFile, DB_FILE);
+  });
+  return writeQueue;
+}
+
+module.exports = { readDB, writeDB, DB_FILE };

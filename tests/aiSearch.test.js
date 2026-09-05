@@ -1,7 +1,7 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers/testApp');
 const { parseSearchQuery } = require('../src/services/aiSearch');
-const { matchSignals } = require('../src/services/searchSynonyms');
+const { matchSignals, extractKeywordTokens } = require('../src/services/searchSynonyms');
 const { rankDestinations, scoreDestination } = require('../src/services/searchRanking');
 
 const VALID_CATEGORIES = ['restaurant', 'ice_cream', 'mall', 'fun_place', 'hotel', 'petrol_station'];
@@ -141,9 +141,15 @@ describe('AI Search (OpenRouter)', () => {
       expect(res.status).toBe(200);
       expect(res.body.aiParsed).toBe(true);
       expect(res.body.fallback).toBeNull();
-      expect(res.body.signals).toEqual({
-        category: 'hotel', neighborhood: null, keywords: [], minRating: null, priceLevel: null
+      // AI set keywords: [], but the synonym table's raw-token safety net
+      // (see searchSynonyms.extractKeywordTokens) still pulls "hotel" out
+      // of the query text itself and merges it in - that's the fix for
+      // the "search silently ignores arbitrary words" regression, so
+      // check the other fields exactly and keywords loosely.
+      expect(res.body.signals).toMatchObject({
+        category: 'hotel', neighborhood: null, minRating: null, priceLevel: null
       });
+      expect(res.body.signals.keywords).toEqual(expect.arrayContaining(['hotel']));
       expect(res.body.count).toBeGreaterThan(0);
       expect(res.body.results.length).toBe(res.body.count);
       // Not a hard filter any more - every hotel should be present (and
@@ -246,6 +252,25 @@ describe('AI Search (OpenRouter)', () => {
       expect(res.body.results[0].category).toBe('restaurant');
     });
 
+    it('regression: an arbitrary term absent from every synonym table is still used as a keyword, not silently dropped', async () => {
+      // Before the extractKeywordTokens fix: with the AI unavailable, a
+      // query like "pizza" matched nothing in the curated synonym table
+      // (no category/price/quality/vibe phrase is "pizza"), so signals
+      // came back completely empty and results were just "top rated
+      // overall" with zero connection to what was actually searched for.
+      delete process.env.OPENROUTER_API_KEY;
+      global.fetch = jest.fn();
+
+      const res = await request(app).get('/api/destinations/smart-search?q=pizza');
+
+      expect(res.status).toBe(200);
+      expect(res.body.aiParsed).toBe(false);
+      expect(res.body.signals.keywords).toEqual(['pizza']);
+      // Seven Hills is the only destination tagged "pizza" - it must win,
+      // not just blend into a generic popularity-ranked list.
+      expect(res.body.results[0].name).toBe('Seven Hills');
+    });
+
     it('merges AI and synonym-table keywords, preferring the AI value when both set a category', async () => {
       process.env.OPENROUTER_API_KEY = 'test-key';
       // AI says restaurant; the query text's "hotel" would otherwise hint
@@ -305,6 +330,13 @@ describe('searchSynonyms.matchSignals()', () => {
     expect(matchSignals('outdoor terrace seating').keywords).toContain('outdoor-seating');
   });
 
+  it('falls back to raw query tokens for terms no synonym table knows about', () => {
+    // "pizza", "sushi", "wifi" etc. aren't in any curated table - the
+    // tokenizer is what keeps them from being silently dropped.
+    expect(matchSignals('pizza').keywords).toEqual(['pizza']);
+    expect(matchSignals('good sushi place').keywords).toEqual(['sushi']);
+  });
+
   it('uses word boundaries so a short phrase does not false-positive inside another word', () => {
     // "eat" must not match inside "great"; "top" must not match inside "desktop".
     expect(matchSignals('a great vibe').category).not.toBe('restaurant');
@@ -312,6 +344,18 @@ describe('searchSynonyms.matchSignals()', () => {
     expect(matchSignals('bring your own desktop').category).not.toBe('fun_place');
     // But a standalone word still matches.
     expect(matchSignals("let's eat something").category).toBe('restaurant');
+  });
+});
+
+describe('searchSynonyms.extractKeywordTokens()', () => {
+  it('keeps substantive words and drops short/filler ones', () => {
+    expect(extractKeywordTokens('find me a hotel')).toEqual(['hotel']);
+    expect(extractKeywordTokens('pizza')).toEqual(['pizza']);
+    expect(extractKeywordTokens('')).toEqual([]);
+  });
+
+  it('keeps hyphenated words intact as a single token', () => {
+    expect(extractKeywordTokens('a zzz-no-such-word query')).toContain('zzz-no-such-word');
   });
 });
 

@@ -1,0 +1,101 @@
+# Phase 2 - Microservices. Brings up the API Gateway, three services and
+# RabbitMQ on one Docker network, all on a single VM/host.
+#
+#   docker compose -f docker-compose.phase2.yml up --build
+#
+# Then visit http://localhost:4000 - the same frontend as Phase 1, now
+# served by the gateway and backed by three independent services instead
+# of one monolith. Phase 1's own `docker-compose.yml` is untouched, so both
+# phases can still be run (on different ports) and graded independently.
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: globetrotter-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # management UI - http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  user-service:
+    build: ./services/user-service
+    container_name: globetrotter-user-service
+    environment:
+      - PORT=4001
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
+      - JWT_EXPIRES_IN=7d
+      - DB_FILE=./data/db.json
+      - CORS_ORIGIN=*
+    volumes:
+      - ./services/user-service/data:/usr/src/app/data
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  itinerary-service:
+    build: ./services/itinerary-service
+    container_name: globetrotter-itinerary-service
+    environment:
+      - PORT=4002
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
+      - DB_FILE=./data/db.json
+      - CORS_ORIGIN=*
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:4003
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    volumes:
+      - ./services/itinerary-service/data:/usr/src/app/data
+    depends_on:
+      recommendation-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  recommendation-service:
+    build: ./services/recommendation-service
+    container_name: globetrotter-recommendation-service
+    environment:
+      - PORT=4003
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
+      - DB_FILE=./data/db.json
+      - CORS_ORIGIN=*
+      - ITINERARY_SERVICE_URL=http://itinerary-service:4002
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    volumes:
+      - ./services/recommendation-service/data:/usr/src/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    container_name: globetrotter-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - CORS_ORIGIN=*
+      - USER_SERVICE_URL=http://user-service:4001
+      - ITINERARY_SERVICE_URL=http://itinerary-service:4002
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:4003
+      - GOOGLE_MAPS_EMBED_KEY=${GOOGLE_MAPS_EMBED_KEY:-}
+    depends_on:
+      - user-service
+      - itinerary-service
+      - recommendation-service
+    restart: unless-stopped
+    networks: [globetrotter]
+
+networks:
+  globetrotter:
+    driver: bridge

@@ -47,6 +47,34 @@ const CATEGORY_SYNONYMS = [
   { phrases: ['attraction', 'museum', 'park', 'sightseeing', 'things to do'], category: 'fun_place' }
 ];
 
+// Common filler words to drop when tokenizing a raw query into keywords
+// below - they carry no search signal and (being short/common) would
+// otherwise generate near-universal, meaningless substring matches.
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'with', 'without', 'for', 'of', 'in', 'on', 'at', 'to',
+  'near', 'nearby', 'around', 'me', 'my', 'i', 'is', 'are', 'be', 'some', 'someone',
+  'somewhere', 'something', 'place', 'places', 'spot', 'spots', 'looking', 'find', 'want',
+  'need', 'please', 'that', 'this', 'it', 'has', 'have', 'can', 'you', 'we', 'us', 'good',
+  'nice', 'really', 'very', 'just', 'like'
+]);
+
+/**
+ * Splits free text into plain lowercase word tokens (3+ characters,
+ * common filler words removed) for use as ranking keywords. This is the
+ * safety net for search terms the curated tables above don't know about
+ * at all - "pizza", "sushi", "wifi", a neighborhood-adjacent word, etc.
+ * Without this, a query using none of the phrases above carries NO
+ * signal whatsoever whenever the AI is unavailable (the sole signal
+ * source in that case), and the ranking would silently fall back to
+ * "just show popular places" while ignoring what was actually typed.
+ */
+function extractKeywordTokens(queryText) {
+  return (queryText || '')
+    .toLowerCase()
+    .split(/[^a-z0-9-]+/)
+    .filter((word) => word.length >= 3 && !STOPWORDS.has(word));
+}
+
 /**
  * Whether `phrase` occurs in `term` (both already lowercase). A single
  * alphanumeric word (e.g. "top", "eat", "hotel") is matched on word
@@ -83,6 +111,7 @@ function matchSignals(queryText) {
   VIBE_SYNONYMS.forEach((entry) => {
     if (matchesAny(term, entry)) keywords.push(...entry.tags);
   });
+  keywords.push(...extractKeywordTokens(queryText));
 
   return {
     category: categoryMatch ? categoryMatch.category : null,
@@ -97,5 +126,6 @@ module.exports = {
   QUALITY_SYNONYMS,
   VIBE_SYNONYMS,
   CATEGORY_SYNONYMS,
-  matchSignals
+  matchSignals,
+  extractKeywordTokens
 };
