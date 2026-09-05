@@ -22,7 +22,18 @@
       <div class="search-row">
         <input id="searchInput" type="text" placeholder="Try &quot;cozy place with good grilled fish&quot; or &quot;budget hotel near Bastos&quot;" />
         <button id="searchBtn" class="btn btn-primary">Search</button>
+        <button id="nearMeBtn" type="button" class="btn btn-outline">📍 Near me</button>
       </div>
+      <div id="nearMeControls" class="near-me-controls hidden">
+        <label for="radiusSelect">Within</label>
+        <select id="radiusSelect">
+          <option value="2">2 km</option>
+          <option value="5">5 km</option>
+          <option value="10" selected>10 km</option>
+          <option value="25">25 km</option>
+        </select>
+      </div>
+      <div id="nearMeError" class="field__error"></div>
       <div class="chip-row" id="categoryChips">
         <button class="chip active" data-category="">All</button>
       </div>

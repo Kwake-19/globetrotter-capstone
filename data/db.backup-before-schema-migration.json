@@ -20,14 +20,7 @@
       "image": "/assets/images/seven-hills.jpg",
       "placeId": "ChIJsY7_jGDPixAR1GBuVib5iXc",
       "googleRating": 4.2,
-      "localImagePath": "/images/places/dest-001.jpg",
-      "photos": [
-        "/images/places/dest-001.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-001.jpg"
     },
     {
       "id": "dest-002",
@@ -47,14 +40,7 @@
       ],
       "placeId": "ChIJiVIvo8jPixARGqQsoqR3hsU",
       "googleRating": 4.1,
-      "localImagePath": "/images/places/dest-002.jpg",
-      "photos": [
-        "/images/places/dest-002.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-002.jpg"
     },
     {
       "id": "dest-003",
@@ -74,14 +60,7 @@
       ],
       "placeId": "ChIJ9XHluVbPixARnp9sMZI0GUI",
       "googleRating": 4.3,
-      "localImagePath": "/images/places/dest-003.jpg",
-      "photos": [
-        "/images/places/dest-003.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-003.jpg"
     },
     {
       "id": "dest-004",
@@ -101,14 +80,7 @@
       ],
       "placeId": "ChIJDy__7rLPixARMnSrVM-RFWY",
       "googleRating": 4.1,
-      "localImagePath": "/images/places/dest-004.jpg",
-      "photos": [
-        "/images/places/dest-004.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-004.jpg"
     },
     {
       "id": "dest-005",
@@ -128,14 +100,7 @@
       ],
       "placeId": "ChIJNyM8QGjPixAR5pKOxKPfRAs",
       "googleRating": 4,
-      "localImagePath": "/images/places/dest-005.jpg",
-      "photos": [
-        "/images/places/dest-005.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-005.jpg"
     },
     {
       "id": "dest-006",
@@ -155,14 +120,7 @@
       ],
       "placeId": "ChIJ9e8LwYXFixAR9HyQx6sFODE",
       "googleRating": 3.8,
-      "localImagePath": "/images/places/dest-006.jpg",
-      "photos": [
-        "/images/places/dest-006.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-006.jpg"
     },
     {
       "id": "dest-007",
@@ -182,14 +140,7 @@
       ],
       "placeId": "ChIJmyIbSQDPixAR1m2PKqK4nwk",
       "googleRating": 3.9,
-      "localImagePath": "/images/places/dest-007.jpg",
-      "photos": [
-        "/images/places/dest-007.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-007.jpg"
     },
     {
       "id": "dest-008",
@@ -209,14 +160,7 @@
       ],
       "placeId": "ChIJFcRmxcDPixARXotRYoZpTdI",
       "googleRating": 3.8,
-      "localImagePath": "/images/places/dest-008.jpg",
-      "photos": [
-        "/images/places/dest-008.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-008.jpg"
     },
     {
       "id": "dest-010",
@@ -237,14 +181,7 @@
       "image": "/assets/images/playce-yaounde.jpg",
       "placeId": "ChIJjw7DhizPixARu7oLFtwViiw",
       "googleRating": 4.4,
-      "localImagePath": "/images/places/dest-010.jpg",
-      "photos": [
-        "/images/places/dest-010.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-010.jpg"
     },
     {
       "id": "dest-011",
@@ -263,14 +200,7 @@
       ],
       "placeId": "ChIJ7Qp9FwHPixARVw0cdQjmDbk",
       "googleRating": 4.1,
-      "localImagePath": "/images/places/dest-011.jpg",
-      "photos": [
-        "/images/places/dest-011.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-011.jpg"
     },
     {
       "id": "dest-012",
@@ -290,14 +220,7 @@
       ],
       "placeId": "ChIJy9GdpmDPixARvOHWftVm-6w",
       "googleRating": 4.4,
-      "localImagePath": "/images/places/dest-012.jpg",
-      "photos": [
-        "/images/places/dest-012.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-012.jpg"
     },
     {
       "id": "dest-013",
@@ -316,14 +239,7 @@
       ],
       "placeId": "ChIJgXMz9hjPixARQIbT8j9iPHI",
       "googleRating": 5,
-      "localImagePath": "/images/places/dest-013.jpg",
-      "photos": [
-        "/images/places/dest-013.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-013.jpg"
     },
     {
       "id": "dest-014",
@@ -344,14 +260,7 @@
       "image": "/assets/images/reunification-monument.jpg",
       "placeId": "ChIJDYwQ-I3PixARbfuvUowvSKM",
       "googleRating": 4.1,
-      "localImagePath": "/images/places/dest-014.jpg",
-      "photos": [
-        "/images/places/dest-014.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-014.jpg"
     },
     {
       "id": "dest-015",
@@ -371,14 +280,7 @@
       ],
       "placeId": "ChIJQSjfwoPPixAR7bnhR6xXoI8",
       "googleRating": 3.9,
-      "localImagePath": "/images/places/dest-015.jpg",
-      "photos": [
-        "/images/places/dest-015.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-015.jpg"
     },
     {
       "id": "dest-016",
@@ -398,14 +300,7 @@
       ],
       "placeId": "ChIJJQe4WPjQixARb4zuy_MCuEI",
       "googleRating": 3.8,
-      "localImagePath": "/images/places/dest-016.jpg",
-      "photos": [
-        "/images/places/dest-016.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-016.jpg"
     },
     {
       "id": "dest-017",
@@ -425,14 +320,7 @@
       ],
       "placeId": "ChIJheoeqJ3PixARr0rtFN6v8l4",
       "googleRating": 3.4,
-      "localImagePath": "/images/places/dest-017.jpg",
-      "photos": [
-        "/images/places/dest-017.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-017.jpg"
     },
     {
       "id": "dest-018",
@@ -452,14 +340,7 @@
       ],
       "placeId": "ChIJIXKrP37PixAR5SZitaLIPlw",
       "googleRating": 4.1,
-      "localImagePath": "/images/places/dest-018.jpg",
-      "photos": [
-        "/images/places/dest-018.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-018.jpg"
     },
     {
       "id": "dest-019",
@@ -480,14 +361,7 @@
       "image": "/assets/images/hilton-yaounde.jpg",
       "placeId": "ChIJ9f__C4PPixARPCFdQmBylWY",
       "googleRating": 4.2,
-      "localImagePath": "/images/places/dest-019.jpg",
-      "photos": [
-        "/images/places/dest-019.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-019.jpg"
     },
     {
       "id": "dest-020",
@@ -503,14 +377,7 @@
       "tags": [],
       "placeId": "ChIJL2N2L4LPixARMNI39mBBM7U",
       "googleRating": 3.9,
-      "localImagePath": "/images/places/dest-020.jpg",
-      "photos": [
-        "/images/places/dest-020.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-020.jpg"
     },
     {
       "id": "dest-021",
@@ -530,14 +397,7 @@
       ],
       "placeId": "ChIJ9xaAKQDFixARHXunIks6yRg",
       "googleRating": 4,
-      "localImagePath": "/images/places/dest-021.jpg",
-      "photos": [
-        "/images/places/dest-021.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-021.jpg"
     },
     {
       "id": "dest-022",
@@ -557,14 +417,7 @@
       ],
       "placeId": "ChIJMekCTXjPixARrXO8UMwTZW4",
       "googleRating": 4,
-      "localImagePath": "/images/places/dest-022.jpg",
-      "photos": [
-        "/images/places/dest-022.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-022.jpg"
     },
     {
       "id": "dest-023",
@@ -584,14 +437,7 @@
       ],
       "placeId": "ChIJr5cg5mjPixARZePIsZQez7I",
       "googleRating": 4.3,
-      "localImagePath": "/images/places/dest-023.jpg",
-      "photos": [
-        "/images/places/dest-023.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-023.jpg"
     },
     {
       "id": "dest-024",
@@ -610,14 +456,7 @@
       ],
       "placeId": "ChIJBbz-SKHPixARk3d11-K-Mng",
       "googleRating": 3.7,
-      "localImagePath": "/images/places/dest-024.jpg",
-      "photos": [
-        "/images/places/dest-024.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-024.jpg"
     },
     {
       "id": "dest-025",
@@ -636,14 +475,7 @@
       ],
       "placeId": "ChIJn1df4ZTPixARgepCrqsgM14",
       "googleRating": 3.7,
-      "localImagePath": "/images/places/dest-025.jpg",
-      "photos": [
-        "/images/places/dest-025.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-025.jpg"
     },
     {
       "id": "dest-chijf5vdnrvfixareext2wg17d0",
@@ -668,14 +500,7 @@
       ],
       "placeId": "ChIJF5VDnrvFixAREeXT2wG17d0",
       "googleRating": 5,
-      "localImagePath": "/images/places/dest-chijf5vdnrvfixareext2wg17d0.jpg",
-      "photos": [
-        "/images/places/dest-chijf5vdnrvfixareext2wg17d0.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijf5vdnrvfixareext2wg17d0.jpg"
     },
     {
       "id": "dest-chijtvwnncdpixarps5n6v3dkc",
@@ -707,14 +532,7 @@
       ],
       "placeId": "ChIJtVwNnCDPixARps5N6_v3dkc",
       "googleRating": 4.7,
-      "localImagePath": "/images/places/dest-chijtvwnncdpixarps5n6v3dkc.jpg",
-      "photos": [
-        "/images/places/dest-chijtvwnncdpixarps5n6v3dkc.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijtvwnncdpixarps5n6v3dkc.jpg"
     },
     {
       "id": "dest-chijd4idpjppixarh91suexlpws",
@@ -739,14 +557,7 @@
       ],
       "placeId": "ChIJD4iDpjPPixARh91SuEXLPws",
       "googleRating": 4.7,
-      "localImagePath": "/images/places/dest-chijd4idpjppixarh91suexlpws.jpg",
-      "photos": [
-        "/images/places/dest-chijd4idpjppixarh91suexlpws.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijd4idpjppixarh91suexlpws.jpg"
     },
     {
       "id": "dest-chijyqmwf7hpixarby0bwclm1k",
@@ -777,14 +588,7 @@
       ],
       "placeId": "ChIJyQmWf7HPixARBy0bwclM-1k",
       "googleRating": 4.5,
-      "localImagePath": "/images/places/dest-chijyqmwf7hpixarby0bwclm1k.jpg",
-      "photos": [
-        "/images/places/dest-chijyqmwf7hpixarby0bwclm1k.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijyqmwf7hpixarby0bwclm1k.jpg"
     },
     {
       "id": "dest-chijwxkfj0fpixarejoijyqdshw",
@@ -806,14 +610,7 @@
       ],
       "placeId": "ChIJWXKFJ0fPixAREJoiJyqDsHw",
       "googleRating": 4.6,
-      "localImagePath": "/images/places/dest-chijwxkfj0fpixarejoijyqdshw.jpg",
-      "photos": [
-        "/images/places/dest-chijwxkfj0fpixarejoijyqdshw.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijwxkfj0fpixarejoijyqdshw.jpg"
     },
     {
       "id": "dest-chij9upe8wzhixartsewa0c9ani",
@@ -831,14 +628,7 @@
       ],
       "placeId": "ChIJ9Upe8WzHixARtSEwa0C9ANI",
       "googleRating": 4.2,
-      "localImagePath": "/images/places/dest-chij9upe8wzhixartsewa0c9ani.jpg",
-      "photos": [
-        "/images/places/dest-chij9upe8wzhixartsewa0c9ani.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chij9upe8wzhixartsewa0c9ani.jpg"
     },
     {
       "id": "dest-chijcs84hzvhixarkdlocclw5hw",
@@ -856,14 +646,7 @@
       ],
       "placeId": "ChIJCS84hzvHixARKDLoccLW5hw",
       "googleRating": 5,
-      "localImagePath": "/images/places/dest-chijcs84hzvhixarkdlocclw5hw.jpg",
-      "photos": [
-        "/images/places/dest-chijcs84hzvhixarkdlocclw5hw.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijcs84hzvhixarkdlocclw5hw.jpg"
     },
     {
       "id": "dest-chijm1gsowdfixaranxhqvmlxq4",
@@ -881,14 +664,7 @@
       ],
       "placeId": "ChIJm1gSOwDFixARANXhQvMlXq4",
       "googleRating": 4.8,
-      "localImagePath": "/images/places/dest-chijm1gsowdfixaranxhqvmlxq4.jpg",
-      "photos": [
-        "/images/places/dest-chijm1gsowdfixaranxhqvmlxq4.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-chijm1gsowdfixaranxhqvmlxq4.jpg"
     },
     {
       "name": "United Hotel International",
@@ -904,14 +680,7 @@
       "tags": [],
       "placeId": "ChIJK3btmLHPixARcPiP8H6QW-4",
       "googleRating": 4,
-      "localImagePath": "/images/places/dest-unitedhotelint.jpg",
-      "photos": [
-        "/images/places/dest-unitedhotelint.jpg"
-      ],
-      "phone": null,
-      "website": null,
-      "openingHours": null,
-      "amenities": []
+      "localImagePath": "/images/places/dest-unitedhotelint.jpg"
     }
   ],
   "itineraries": []

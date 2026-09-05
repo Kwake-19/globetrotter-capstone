@@ -64,6 +64,27 @@
     return body;
   }
 
+  /**
+   * Wraps navigator.geolocation.getCurrentPosition in a Promise, resolving
+   * with { latitude, longitude } or rejecting with an Error on denial/
+   * unavailability. Shared by the place detail page's "Get Directions" and
+   * the browse page's "Near me" search so the browser-geolocation-call
+   * mechanics live in exactly one place - each caller still shows its own
+   * contextual message on rejection (the two features want different copy).
+   */
+  function getCurrentPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not available in this browser.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        () => reject(new Error('Location access was denied or unavailable.'))
+      );
+    });
+  }
+
   /** Redirects to login if there's no token. Call at the top of protected pages. */
   function requireAuthOrRedirect() {
     if (!getToken()) {
@@ -195,7 +216,7 @@
       mount.innerHTML = `
         <div class="site-header__inner">
           ${brandHtml('/app.html')}
-          <nav class="nav-links">${links}</nav>
+          <nav class="nav-links" id="navLinks">${links}</nav>
           <div class="nav-actions">
             <button class="btn btn-ghost btn-sm" id="navLogoutBtn">Log out</button>
           </div>
@@ -203,6 +224,22 @@
       const logoutBtn = document.getElementById('navLogoutBtn');
       if (logoutBtn) logoutBtn.addEventListener('click', logout);
       updateNavBadge();
+
+      // The "Admin" link only shows for admins, checked via a fresh
+      // GET /api/profile (not the possibly-stale cached user in
+      // localStorage) so granting admin access - a manual data/db.json
+      // edit - takes effect on the next page load without requiring the
+      // user to log out and back in. Added after the initial render so
+      // it never blocks/delays showing the rest of the nav.
+      api('/profile').then((user) => {
+        const navLinks = document.getElementById('navLinks');
+        if (!user || !user.isAdmin || !navLinks) return;
+        const adminLink = document.createElement('a');
+        adminLink.className = `nav-link${active === 'admin' ? ' active' : ''}`;
+        adminLink.href = '/admin.html';
+        adminLink.textContent = 'Admin';
+        navLinks.appendChild(adminLink);
+      }).catch(() => {});
     }
   }
 
@@ -225,6 +262,7 @@
     getUser,
     setAuth,
     logout,
+    getCurrentPosition,
     requireAuthOrRedirect,
     renderPlaceImage,
     getDraftTrip,

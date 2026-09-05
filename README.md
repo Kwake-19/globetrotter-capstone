@@ -41,6 +41,10 @@ save and share day-trip itineraries built from them.
 | PUT    | /api/profile                      | required | Update `name`, `phone`, `homeCity` (not email/username/password) |
 | GET    | /api/config                       | —        | Frontend-facing config, currently `{ googleMapsEmbedKey }` — see [Maps](#maps) |
 | GET    | /api/health                       | —        | Health check (used by Docker) |
+| GET    | /api/admin/destinations           | admin    | Full destination list, every field — see [Admin access](#admin-access) |
+| POST   | /api/admin/destinations           | admin    | Create a destination (`name`, `category`, `neighborhood`, `latitude`, `longitude` required) |
+| PUT    | /api/admin/destinations/:id       | admin    | Update any field on a destination |
+| DELETE | /api/admin/destinations/:id       | admin    | Remove a destination |
 
 ### Destination categories
 
@@ -60,9 +64,12 @@ save and share day-trip itineraries built from them.
 | `/trip.html?id=X`              | `public/trip.html`            | Required     | One itinerary — share/edit/delete |
 | `/shared.html?shareId=X`       | `public/shared.html`          | Public       | Read-only shared itinerary view |
 | `/profile.html`                | `public/profile.html`         | Required     | Edit account details |
+| `/admin.html`                  | `public/admin.html`           | Admin        | Destination list — add/edit/delete, see [Admin access](#admin-access) |
+| `/admin-edit.html?id=X`        | `public/admin-edit.html`      | Admin        | Create (no `id`) or edit one destination |
 
 Pages marked "Required" redirect to `/login.html?redirect=<page>` in JS if
-there's no token in `localStorage`.
+there's no token in `localStorage`. Pages marked "Admin" do the same, plus
+redirect non-admins to `/app.html` — see [Admin access](#admin-access).
 
 ## Local setup (no Docker)
 
@@ -170,6 +177,38 @@ response's `aiParsed: false` tells the frontend not to show the
 "AI-powered search" badge — so a fallback never looks broken, just plain.
 With no `OPENROUTER_API_KEY` set at all, the app never even makes the
 network call.
+
+## Admin access
+
+`/admin.html` (list, with add/edit/delete) and `/admin-edit.html` (the
+create/edit form) let an admin manage destinations directly — add new
+places, fix bad data, or remove one — instead of relying only on the
+scraping/enrichment scripts in `scripts/`. Curated data quality matters
+more than automation at this project's scale.
+
+There's no self-service admin signup, on purpose — it's a manual,
+one-time step:
+
+1. Create a normal account through `/signup.html` (or Google Sign-In).
+2. Stop the server, open `data/db.json`, find your user object under
+   `users`, and set `"isAdmin": true`.
+3. Restart the server (or just refresh, if it was already running) and
+   an "Admin" link appears in the nav bar; `/admin.html` is now reachable.
+
+Every `/api/admin/*` route requires a valid token (`requireAuth`) AND a
+fresh `isAdmin: true` lookup from `data/db.json` (`requireAdmin`, in
+`src/middleware/requireAdmin.js`) — not just something baked into the JWT
+at login time, so flipping the flag in step 2 takes effect immediately on
+that user's *existing* token, no re-login needed. A non-admin gets a 403
+from every admin route, and `/admin.html`/`/admin-edit.html` check
+`GET /api/profile` before rendering anything — a non-admin (or logged-out
+visitor) is redirected away in JS before any admin content is built, not
+shown-then-hidden with CSS.
+
+Editing a destination's `photos` list also updates `localImagePath`
+(`photos[0]`) automatically — it's a read-only convenience field for
+older frontend code that only ever expected one image, not something the
+admin form edits directly.
 
 ## Testing
 

@@ -3,10 +3,12 @@ const { readDB } = require('../utils/dataStore');
 const { parseSearchQuery } = require('../services/aiSearch');
 const { matchSignals } = require('../services/searchSynonyms');
 const { rankDestinations, scoreDestination } = require('../services/searchRanking');
+const { haversineDistanceKm } = require('../utils/geo');
 
 const router = express.Router();
 
 const VALID_CATEGORIES = ['restaurant', 'ice_cream', 'mall', 'fun_place', 'petrol_station', 'hotel'];
+const DEFAULT_NEARBY_RADIUS_KM = 10;
 
 // scripts/enrich-places.js fills these in later; default them to null so API
 // consumers always see the fields rather than them being missing entirely.
@@ -55,6 +57,54 @@ router.get('/', async (req, res, next) => {
     if (q) {
       results = filterByPlainText(results, q);
     }
+
+    return res.json({ count: results.length, results: results.map(toPublicDestination) });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /api/destinations/nearby?lat=<x>&lng=<y>&radiusKm=<optional, default 10>&category=<optional>
+// Straight-line (haversine) distance from the given point to every
+// destination, filtered to radiusKm and optionally by category, sorted
+// nearest-first. Each result carries a distanceKm field (1 decimal) on
+// top of its normal fields.
+router.get('/nearby', async (req, res, next) => {
+  try {
+    const { lat, lng, radiusKm, category } = req.query;
+
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (lat === undefined || lng === undefined || lat === '' || lng === ''
+      || !Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+      return res.status(400).json({ error: 'lat and lng are required and must be numeric' });
+    }
+
+    if (category && !VALID_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        error: `category must be one of: ${VALID_CATEGORIES.join(', ')}`
+      });
+    }
+
+    const radius = radiusKm !== undefined && radiusKm !== '' ? Number(radiusKm) : DEFAULT_NEARBY_RADIUS_KM;
+    if (!Number.isFinite(radius) || radius <= 0) {
+      return res.status(400).json({ error: 'radiusKm must be a positive number' });
+    }
+
+    const db = await readDB();
+
+    let results = db.destinations
+      .map((d) => ({
+        ...d,
+        distanceKm: Math.round(haversineDistanceKm(latNum, lngNum, d.latitude, d.longitude) * 10) / 10
+      }))
+      .filter((d) => d.distanceKm <= radius);
+
+    if (category) {
+      results = results.filter((d) => d.category === category);
+    }
+
+    results.sort((a, b) => a.distanceKm - b.distanceKm);
 
     return res.json({ count: results.length, results: results.map(toPublicDestination) });
   } catch (err) {

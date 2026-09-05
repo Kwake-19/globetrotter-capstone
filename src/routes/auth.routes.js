@@ -86,6 +86,7 @@ router.post('/register', async (req, res, next) => {
       phone: phone ? String(phone).trim() : '',
       homeCity: homeCity ? String(homeCity).trim() : '',
       passwordHash,
+      isAdmin: false,
       preferredCategories: [],
       createdAt: new Date().toISOString()
     };
@@ -201,6 +202,7 @@ router.post('/google', async (req, res, next) => {
         passwordHash: null,
         authProvider: 'google',
         googleId,
+        isAdmin: false,
         preferredCategories: [],
         createdAt: new Date().toISOString()
       };
