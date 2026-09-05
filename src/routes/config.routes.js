@@ -8,7 +8,8 @@ const router = express.Router();
 // expose to any visitor.
 router.get('/', (req, res) => {
   res.json({
-    googleMapsEmbedKey: process.env.GOOGLE_MAPS_EMBED_KEY || null
+    googleMapsEmbedKey: process.env.GOOGLE_MAPS_EMBED_KEY || null,
+    googleClientId: process.env.GOOGLE_CLIENT_ID || null
   });
 });
 
