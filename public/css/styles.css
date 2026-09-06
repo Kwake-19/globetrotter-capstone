@@ -424,9 +424,9 @@ a:hover { color: var(--accent); }
 .place-card__name { font-size: 16px; font-weight: 700; margin: 0; }
 .place-card__meta { font-size: 13px; color: var(--ink-soft); }
 .place-card__desc { font-size: 13.5px; color: var(--ink-soft); flex: 1; margin: 0; }
-.place-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; gap: 8px; }
-.place-card__meta-group { display: flex; align-items: center; gap: 8px; }
-.place-card__rating { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.place-card__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-top: 4px; gap: 8px; }
+.place-card__meta-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.place-card__rating { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
 .place-card__distance { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 
 .pill {
@@ -515,6 +515,41 @@ a:hover { color: var(--accent); }
 .map-unavailable p:first-child { font-weight: 600; color: var(--ink); font-size: 14.5px; }
 .map-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
 .map-note { font-size: 13px; color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------------- */
+/* Reviews (place detail page)                                              */
+/* ---------------------------------------------------------------------- */
+.reviews-section { margin-top: 36px; }
+.reviews-section h2 { font-size: 19px; margin-bottom: 14px; }
+.reviews-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+.reviews-empty { color: var(--ink-soft); font-size: 13.5px; }
+.reviews-login-prompt { font-size: 13.5px; color: var(--ink-soft); }
+
+.review-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: #fff;
+}
+.review-card--mine { background: var(--surface); }
+.review-card__head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.review-card__stars { color: var(--accent); font-size: 14px; letter-spacing: 1px; }
+.review-card__author { font-weight: 600; font-size: 13.5px; }
+.review-card__date { font-size: 12px; color: var(--ink-soft); }
+.review-card__text { margin: 0 0 10px; font-size: 13.5px; color: var(--ink); }
+.review-card--mine .review-card__text { margin-bottom: 10px; }
+
+.review-form { max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+.review-form select,
+.review-form textarea {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+}
 
 /* ---------------------------------------------------------------------- */
 /* Trip builder                                                             */

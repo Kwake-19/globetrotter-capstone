@@ -111,6 +111,25 @@
       onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${className}-fallback',textContent:'Image unavailable'}))" />`;
   }
 
+  // ---- ratings ------------------------------------------------------------
+  /**
+   * A single-line rating summary shown on cards and the place detail page.
+   * Google's rating and GlobeTrotter's own user-submitted rating
+   * (userRatingAvg/userRatingCount, from data/db.json's `reviews`) are
+   * kept clearly separate and labeled - never blended into one number -
+   * e.g. "★ 4.2 Google · 4.5 from 3 GlobeTrotter reviews".
+   */
+  function ratingSummary(place) {
+    const googlePart = typeof place.rating === 'number'
+      ? `★ ${place.rating.toFixed(1)} Google`
+      : 'No Google rating yet';
+
+    if (!place.userRatingCount) return googlePart;
+
+    const reviewWord = place.userRatingCount === 1 ? 'review' : 'reviews';
+    return `${googlePart} · ${place.userRatingAvg.toFixed(1)} from ${place.userRatingCount} GlobeTrotter ${reviewWord}`;
+  }
+
   // ---- draft trip (localStorage cart) ---------------------------------------
   function getDraftTrip() {
     try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '[]'); } catch (e) { return []; }
@@ -265,6 +284,7 @@
     getCurrentPosition,
     requireAuthOrRedirect,
     renderPlaceImage,
+    ratingSummary,
     getDraftTrip,
     saveDraftTrip,
     addToDraftTrip,

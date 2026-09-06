@@ -14,8 +14,8 @@
     `;
   }
 
-  function ratingLabel(place) {
-    return typeof place.rating === 'number' ? `★ ${place.rating.toFixed(1)}` : 'No rating yet';
+  function starDisplay(rating) {
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
   }
 
   /** All of a place's photos, falling back to the single legacy image field if photos[] is empty. */
@@ -64,6 +64,140 @@
 
     document.getElementById('galleryPrev').addEventListener('click', () => show(index - 1));
     document.getElementById('galleryNext').addEventListener('click', () => show(index + 1));
+  }
+
+  function reviewCard(review) {
+    const date = new Date(review.createdAt).toLocaleDateString();
+    return `
+      <div class="review-card">
+        <div class="review-card__head">
+          <span class="review-card__stars">${starDisplay(review.rating)}</span>
+          <span class="review-card__author">${GT.escapeHtml(review.userName)}</span>
+          <span class="review-card__date">${date}</span>
+        </div>
+        <p class="review-card__text">${GT.escapeHtml(review.text)}</p>
+      </div>
+    `;
+  }
+
+  /** The review submit/edit form. `existing` is null for a fresh review, or the user's own review to edit. */
+  function renderReviewForm(place, existing, onSaved) {
+    const wrap = document.getElementById('reviewFormWrap');
+    wrap.innerHTML = `
+      <form id="reviewForm" class="review-form">
+        <div class="field">
+          <label for="reviewRating">Your rating</label>
+          <select id="reviewRating">
+            ${[5, 4, 3, 2, 1].map((n) => `<option value="${n}"${existing && existing.rating === n ? ' selected' : ''}>${starDisplay(n)} (${n})</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label for="reviewText">Your review</label>
+          <textarea id="reviewText" rows="3" maxlength="500">${existing ? GT.escapeHtml(existing.text) : ''}</textarea>
+        </div>
+        <div id="reviewFormError" class="field__error"></div>
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-primary btn-sm">${existing ? 'Save changes' : 'Submit review'}</button>
+          ${existing ? '<button type="button" class="btn btn-ghost btn-sm" id="cancelEditBtn">Cancel</button>' : ''}
+        </div>
+      </form>
+    `;
+
+    if (existing) {
+      document.getElementById('cancelEditBtn').addEventListener('click', onSaved);
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('reviewFormError');
+      errorEl.textContent = '';
+
+      const rating = Number(document.getElementById('reviewRating').value);
+      const text = document.getElementById('reviewText').value.trim();
+      if (!text) {
+        errorEl.textContent = 'Please write a few words.';
+        return;
+      }
+
+      try {
+        await GT.api(`/destinations/${encodeURIComponent(place.id)}/reviews`, {
+          method: 'POST',
+          body: JSON.stringify({ rating, text })
+        });
+        onSaved();
+      } catch (err) {
+        errorEl.textContent = err.message;
+      }
+    });
+  }
+
+  async function renderReviewsSection(place) {
+    const section = document.getElementById('reviewsSection');
+
+    let reviews = [];
+    try {
+      const data = await GT.api(`/destinations/${encodeURIComponent(place.id)}/reviews`);
+      reviews = data.results;
+    } catch (err) {
+      // Leave reviews empty - still show the section shell and the form.
+    }
+
+    const currentUser = GT.getUser();
+    const myReview = currentUser ? reviews.find((r) => r.userId === currentUser.id) : null;
+    // The user's own review gets its own callout (with Edit/Delete) below,
+    // so it isn't shown twice in the plain list.
+    const otherReviews = myReview ? reviews.filter((r) => r.id !== myReview.id) : reviews;
+
+    section.innerHTML = `
+      <h2>Reviews</h2>
+      <div id="reviewsList" class="reviews-list">
+        ${otherReviews.length === 0 && !myReview ? '<p class="reviews-empty">No reviews yet — be the first!</p>' : otherReviews.map(reviewCard).join('')}
+      </div>
+      <div id="reviewFormWrap"></div>
+    `;
+
+    function showMyReviewCallout() {
+      renderReviewsSection(place);
+    }
+
+    if (!GT.getToken()) {
+      document.getElementById('reviewFormWrap').innerHTML = '<p class="reviews-login-prompt"><a href="/login.html">Log in</a> to leave a review.</p>';
+      return;
+    }
+
+    if (myReview) {
+      const wrap = document.getElementById('reviewFormWrap');
+      wrap.innerHTML = `
+        <div class="review-card review-card--mine">
+          <div class="review-card__head">
+            <span class="review-card__stars">${starDisplay(myReview.rating)}</span>
+            <span class="review-card__author">Your review</span>
+          </div>
+          <p class="review-card__text">${GT.escapeHtml(myReview.text)}</p>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn btn-outline btn-sm" id="editReviewBtn">Edit</button>
+            <button type="button" class="link-btn" id="deleteReviewBtn">Delete</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('editReviewBtn').addEventListener('click', () => {
+        renderReviewForm(place, myReview, showMyReviewCallout);
+      });
+      document.getElementById('deleteReviewBtn').addEventListener('click', async () => {
+        if (!window.confirm('Delete your review?')) return;
+        try {
+          await GT.api(`/destinations/${encodeURIComponent(place.id)}/reviews/${encodeURIComponent(myReview.id)}`, {
+            method: 'DELETE'
+          });
+          renderReviewsSection(place);
+        } catch (err) {
+          window.alert(err.message);
+        }
+      });
+      return;
+    }
+
+    renderReviewForm(place, null, showMyReviewCallout);
   }
 
   async function renderLocationSection(place) {
@@ -151,7 +285,7 @@
       </div>
       <div class="place-detail__meta-row">
         <span>${GT.escapeHtml(place.neighborhood)}</span>
-        <span class="rating">${ratingLabel(place)}</span>
+        <span class="rating">${GT.escapeHtml(GT.ratingSummary(place))}</span>
         <span>${GT.escapeHtml(place.address)}</span>
       </div>
       <p>${GT.escapeHtml(place.description)}</p>
@@ -166,6 +300,7 @@
         <a class="btn btn-outline" href="/app.html">Back to Browse</a>
       </div>
       <section class="map-section" id="locationSection"></section>
+      <section class="reviews-section" id="reviewsSection"></section>
     `;
 
     wirePhotoGallery(place);
@@ -183,6 +318,7 @@
     });
 
     renderLocationSection(place);
+    renderReviewsSection(place);
   }
 
   const id = new URLSearchParams(window.location.search).get('id');

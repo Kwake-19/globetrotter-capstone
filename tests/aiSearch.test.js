@@ -384,6 +384,28 @@ describe('searchRanking.rankDestinations()', () => {
     expect(scoreDestination(destinations[0], signals)).toBeGreaterThan(scoreDestination(destinations[1], signals));
   });
 
+  it('awards +3 per keyword found in review text - lower weight than a tag (+10) or description (+4) match', () => {
+    const destination = place({ id: 'a', name: 'A', tags: [], description: '' });
+    const signals = { category: null, neighborhood: null, priceLevel: null, minRating: null, keywords: ['sunset'] };
+
+    const withoutReview = scoreDestination(destination, signals);
+    const withReview = scoreDestination(destination, signals, 'Amazing sunset views from the terrace.');
+
+    expect(withReview - withoutReview).toBe(3);
+  });
+
+  it('rankDestinations threads reviewTextByDestinationId through to scoring, ranking a review-matched destination first', () => {
+    const destinations = [
+      place({ id: 'a', name: 'A', rating: 4 }),
+      place({ id: 'b', name: 'B', rating: 4 })
+    ];
+    const signals = { category: null, neighborhood: null, priceLevel: null, minRating: null, keywords: ['zzflibbertigibbetzz'] };
+
+    const { results } = rankDestinations(destinations, signals, { b: 'best zzflibbertigibbetzz ever' });
+
+    expect(results[0].id).toBe('b');
+  });
+
   it('never excludes a destination for missing priceLevel data (no penalty, just no bonus)', () => {
     const destinations = [place({ id: 'a', priceLevel: null, rating: 4 })];
     const signals = { category: null, neighborhood: null, priceLevel: 2, minRating: null, keywords: [] };

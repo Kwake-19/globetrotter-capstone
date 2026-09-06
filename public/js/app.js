@@ -31,7 +31,7 @@
         <p class="place-card__desc">${GT.escapeHtml(place.description)}</p>
         <div class="place-card__footer">
           <div class="place-card__meta-group">
-            <span class="place-card__rating">★ ${place.rating.toFixed(1)}</span>
+            <span class="place-card__rating">${GT.escapeHtml(GT.ratingSummary(place))}</span>
             ${distanceLabel}
           </div>
           <div style="display:flex; gap:8px;">

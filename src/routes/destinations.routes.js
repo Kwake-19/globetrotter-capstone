@@ -1,5 +1,8 @@
 const express = require('express');
-const { readDB } = require('../utils/dataStore');
+const { v4: uuidv4 } = require('uuid');
+const { readDB, writeDB } = require('../utils/dataStore');
+const { requireAuth } = require('../middleware/auth');
+const { isAdminUser } = require('../middleware/requireAdmin');
 const { parseSearchQuery } = require('../services/aiSearch');
 const { matchSignals } = require('../services/searchSynonyms');
 const { rankDestinations, scoreDestination } = require('../services/searchRanking');
@@ -9,14 +12,26 @@ const router = express.Router();
 
 const VALID_CATEGORIES = ['restaurant', 'ice_cream', 'mall', 'fun_place', 'petrol_station', 'hotel'];
 const DEFAULT_NEARBY_RADIUS_KM = 10;
+const MAX_REVIEW_TEXT_LENGTH = 500;
 
-// scripts/enrich-places.js fills these in later; default them to null so API
-// consumers always see the fields rather than them being missing entirely.
-function toPublicDestination(destination) {
+// scripts/enrich-places.js fills placeId/localImagePath in later; default
+// them to null so API consumers always see the fields rather than them
+// being missing entirely. userRatingAvg/userRatingCount are computed from
+// data/db.json's `reviews` array - kept separate from the existing
+// Google-sourced `rating` field, never overwriting it.
+function toPublicDestination(destination, allReviews) {
+  const reviews = (allReviews || []).filter((r) => r.destinationId === destination.id);
+  const userRatingCount = reviews.length;
+  const userRatingAvg = userRatingCount > 0
+    ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / userRatingCount) * 10) / 10
+    : null;
+
   return {
     ...destination,
     placeId: destination.placeId ?? null,
-    localImagePath: destination.localImagePath ?? null
+    localImagePath: destination.localImagePath ?? null,
+    userRatingAvg,
+    userRatingCount
   };
 }
 
@@ -58,7 +73,10 @@ router.get('/', async (req, res, next) => {
       results = filterByPlainText(results, q);
     }
 
-    return res.json({ count: results.length, results: results.map(toPublicDestination) });
+    return res.json({
+      count: results.length,
+      results: results.map((d) => toPublicDestination(d, db.reviews))
+    });
   } catch (err) {
     return next(err);
   }
@@ -106,7 +124,10 @@ router.get('/nearby', async (req, res, next) => {
 
     results.sort((a, b) => a.distanceKm - b.distanceKm);
 
-    return res.json({ count: results.length, results: results.map(toPublicDestination) });
+    return res.json({
+      count: results.length,
+      results: results.map((d) => toPublicDestination(d, db.reviews))
+    });
   } catch (err) {
     return next(err);
   }
@@ -164,11 +185,23 @@ router.get('/smart-search', async (req, res, next) => {
     };
     console.log('[smart-search] combined signals:', signals);
 
-    const { results, fallback } = rankDestinations(db.destinations, signals);
+    // Real user language about a place is searchable too, at a lower
+    // weight than a curated tag match (see searchRanking.js) - built as a
+    // destinationId -> concatenated review text lookup so scoreDestination
+    // doesn't need direct access to the whole reviews array.
+    const reviewTextByDestinationId = {};
+    (db.reviews || []).forEach((r) => {
+      reviewTextByDestinationId[r.destinationId] = `${reviewTextByDestinationId[r.destinationId] || ''} ${r.text}`;
+    });
+
+    const { results, fallback } = rankDestinations(db.destinations, signals, reviewTextByDestinationId);
 
     console.log(
       `[smart-search] top ${Math.min(5, results.length)} score(s):`,
-      results.slice(0, 5).map((d) => ({ name: d.name, score: scoreDestination(d, signals) }))
+      results.slice(0, 5).map((d) => ({
+        name: d.name,
+        score: scoreDestination(d, signals, reviewTextByDestinationId[d.id])
+      }))
     );
     if (fallback) console.log(`[smart-search] fallback: ${fallback}`);
 
@@ -177,7 +210,7 @@ router.get('/smart-search', async (req, res, next) => {
       signals,
       fallback,
       count: results.length,
-      results: results.map(toPublicDestination)
+      results: results.map((d) => toPublicDestination(d, db.reviews))
     });
   } catch (err) {
     return next(err);
@@ -206,7 +239,116 @@ router.get('/:id', async (req, res, next) => {
     if (!destination) {
       return res.status(404).json({ error: 'Destination not found' });
     }
-    return res.json(toPublicDestination(destination));
+    return res.json(toPublicDestination(destination, db.reviews));
+  } catch (err) {
+    return next(err);
+  }
+});
+
+function isValidReviewRating(rating) {
+  return Number.isInteger(rating) && rating >= 1 && rating <= 5;
+}
+
+// POST /api/destinations/:id/reviews - one review per user per destination;
+// submitting again UPDATES the existing review rather than creating a
+// duplicate.
+router.post('/:id/reviews', requireAuth, async (req, res, next) => {
+  try {
+    const db = await readDB();
+    const destination = db.destinations.find((d) => d.id === req.params.id);
+    if (!destination) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+
+    const { rating, text } = req.body || {};
+    if (!isValidReviewRating(rating)) {
+      return res.status(400).json({ error: 'rating must be an integer from 1 to 5' });
+    }
+    if (typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+    const trimmedText = text.trim();
+    if (trimmedText.length > MAX_REVIEW_TEXT_LENGTH) {
+      return res.status(400).json({ error: `text must be ${MAX_REVIEW_TEXT_LENGTH} characters or fewer` });
+    }
+
+    const user = db.users.find((u) => u.id === req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!db.reviews) db.reviews = [];
+    const existing = db.reviews.find((r) => r.destinationId === destination.id && r.userId === req.user.id);
+
+    let review;
+    if (existing) {
+      // Update in place - keep the original id/createdAt, refresh
+      // everything else (userName is denormalized, so a since-changed
+      // display name is picked up on the next edit).
+      existing.rating = rating;
+      existing.text = trimmedText;
+      existing.userName = user.name;
+      review = existing;
+    } else {
+      review = {
+        id: uuidv4(),
+        destinationId: destination.id,
+        userId: req.user.id,
+        userName: user.name,
+        rating,
+        text: trimmedText,
+        createdAt: new Date().toISOString()
+      };
+      db.reviews.push(review);
+    }
+
+    await writeDB(db);
+    return res.status(existing ? 200 : 201).json(review);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /api/destinations/:id/reviews - public, newest first, unpaginated (fine at this scale).
+router.get('/:id/reviews', async (req, res, next) => {
+  try {
+    const db = await readDB();
+    const destination = db.destinations.find((d) => d.id === req.params.id);
+    if (!destination) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+
+    const reviews = (db.reviews || [])
+      .filter((r) => r.destinationId === destination.id)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return res.json({ count: reviews.length, results: reviews });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// DELETE /api/destinations/:id/reviews/:reviewId - only the review's own
+// author or an admin (reuses requireAdmin's isAdminUser lookup) may delete it.
+router.delete('/:id/reviews/:reviewId', requireAuth, async (req, res, next) => {
+  try {
+    const db = await readDB();
+    const index = (db.reviews || []).findIndex(
+      (r) => r.id === req.params.reviewId && r.destinationId === req.params.id
+    );
+    if (index === -1) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    const review = db.reviews[index];
+    const isAuthor = review.userId === req.user.id;
+    if (!isAuthor && !isAdminUser(db, req.user.id)) {
+      return res.status(403).json({ error: 'You can only delete your own reviews' });
+    }
+
+    db.reviews.splice(index, 1);
+    await writeDB(db);
+    return res.status(204).send();
   } catch (err) {
     return next(err);
   }

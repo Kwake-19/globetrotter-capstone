@@ -16,8 +16,14 @@ const FALLBACK_SIZE = 5;
  * Starts at 0 and adds points for each signal that matches, plus a small
  * rating-based tiebreaker for every destination (so equally-relevant
  * places still sort with the better-rated one first).
+ *
+ * `reviewText` (optional) is that destination's user reviews concatenated
+ * into one string - passed in rather than read off `destination` itself
+ * so this function stays a pure, side-effect-free scorer and the caller
+ * controls how review text gets looked up (see destinations.routes.js's
+ * smart-search handler).
  */
-function scoreDestination(destination, signals) {
+function scoreDestination(destination, signals, reviewText = '') {
   let score = 0;
 
   if (signals.category && destination.category === signals.category) {
@@ -44,12 +50,16 @@ function scoreDestination(destination, signals) {
   const tags = (destination.tags || []).map((tag) => tag.toLowerCase());
   const name = (destination.name || '').toLowerCase();
   const description = (destination.description || '').toLowerCase();
+  const reviews = (reviewText || '').toLowerCase();
 
   (signals.keywords || []).forEach((rawKeyword) => {
     const keyword = rawKeyword.toLowerCase();
     if (tags.includes(keyword)) score += 10;
     if (name.includes(keyword)) score += 6;
     if (description.includes(keyword)) score += 4;
+    // Lower weight than a tag/description match - real review text is
+    // useful search signal, but less curated/reliable than the rest.
+    if (reviews.includes(keyword)) score += 3;
   });
 
   if (typeof destination.rating === 'number') {
@@ -86,10 +96,16 @@ function topRated(destinations, limit) {
  * The only way this returns a genuinely empty result is an empty
  * `destinations` list, or a category-popular fallback for a category
  * that has zero destinations at all.
+ *
+ * `reviewTextByDestinationId` (optional) maps a destination id to its
+ * concatenated review text, forwarded to scoreDestination() for each one.
  */
-function rankDestinations(destinations, signals) {
+function rankDestinations(destinations, signals, reviewTextByDestinationId = {}) {
   const scored = destinations
-    .map((destination) => ({ destination, score: scoreDestination(destination, signals) }))
+    .map((destination) => ({
+      destination,
+      score: scoreDestination(destination, signals, reviewTextByDestinationId[destination.id])
+    }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score);
 
