@@ -1,22 +1,19 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers/testApp');
 
-describe('GET /api/health', () => {
+describe('itinerary-service health', () => {
   let app;
   let cleanup;
 
-  beforeAll(async () => {
-    ({ app, cleanup } = await createTestApp());
+  beforeAll(() => {
+    ({ app, cleanup } = createTestApp());
   });
 
-  afterAll(async () => {
-    await cleanup();
-  });
+  afterAll(() => cleanup());
 
-  it('returns 200 and a status of ok', async () => {
+  it('GET /api/health returns { status: ok, service: itinerary-service }', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('ok');
-    expect(res.body.service).toBe('itinerary-service');
+    expect(res.body).toEqual({ status: 'ok', service: 'itinerary-service' });
   });
 });

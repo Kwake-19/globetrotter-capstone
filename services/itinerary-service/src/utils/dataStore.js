@@ -1,8 +1,14 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const DB_FILE = path.resolve(process.cwd(), process.env.DB_FILE || './data/db.json');
+// This service owns only the `itineraries` array.
+const DB_FILE = path.resolve(process.cwd(), process.env.DB_FILE || './data/itineraries.json');
 
+/**
+ * Same JSON-file-plus-write-queue pattern as the Phase 1 monolith's
+ * dataStore: reads just parse the file, writes are serialized through an
+ * in-process queue and done via a temp file + rename.
+ */
 let writeQueue = Promise.resolve();
 
 async function readDB() {

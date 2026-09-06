@@ -1,51 +1,26 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const http = require('http');
-const jwt = require('jsonwebtoken');
-
-// A tiny fixture standing in for the Recommendation Service's destinations -
-// this service only cares about `id` (for validation) and passes the rest
-// through untouched when enriching a shared itinerary.
-const FIXTURE_DESTINATIONS = [
-  { id: 'dest-1', name: 'Test Restaurant', category: 'restaurant', rating: 4.5 },
-  { id: 'dest-2', name: 'Test Mall', category: 'mall', rating: 4.2 }
-];
 
 /**
- * A real (but tiny, in-process) HTTP server standing in for the
- * Recommendation Service - fetch-mocking libraries (nock, undici's
- * MockAgent) don't reliably intercept global fetch under Jest's node test
- * environment, since it isolates globals per test file from the process
- * global undici relies on for its dispatcher symbol. A real server on an
- * ephemeral localhost port sidesteps that entirely.
+ * Every test file gets its OWN temp copy of the seed itineraries DB.
+ *
+ * itinerary-service calls destinations-service over global fetch to
+ * validate destinationIds and to enrich the shared view; per the Phase 2
+ * brief that call is MOCKED here. installFetchMock() answers
+ * GET .../api/destinations with a small fixture catalog (or a failure).
  */
-function startRecommendationServiceStub() {
-  return new Promise((resolve) => {
-    const server = http.createServer((req, res) => {
-      if (req.method === 'GET' && req.url === '/api/destinations') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ count: FIXTURE_DESTINATIONS.length, results: FIXTURE_DESTINATIONS }));
-        return;
-      }
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'not found' }));
-    });
-    server.listen(0, '127.0.0.1', () => resolve(server));
-  });
-}
+const FIXTURE_DESTINATIONS = [
+  { id: 'dest-001', name: 'Seven Hills', category: 'restaurant', neighborhood: 'Bastos' },
+  { id: 'dest-002', name: 'Hilton Yaounde', category: 'hotel', neighborhood: 'Centre-ville' },
+  { id: 'dest-003', name: 'Playce Warda', category: 'mall', neighborhood: 'Warda' }
+];
 
-/** Every test file gets its own temp copy of the seed itineraries DB and its own stub server. */
-async function createTestApp() {
+function createTestApp() {
   process.env.NODE_ENV = 'test';
-  process.env.JWT_SECRET = 'test-only-secret-do-not-use-in-prod';
-  process.env.RABBITMQ_URL = 'amqp://127.0.0.1:1'; // deliberately unreachable - publishing is best-effort
+  process.env.DESTINATIONS_SERVICE_URL = 'http://destinations-service:4002';
 
-  const recommendationServer = await startRecommendationServiceStub();
-  const { port } = recommendationServer.address();
-  process.env.RECOMMENDATION_SERVICE_URL = `http://127.0.0.1:${port}`;
-
-  const seedPath = path.join(__dirname, '..', '..', 'data', 'db.json');
+  const seedPath = path.join(__dirname, '..', '..', 'data', 'itineraries.json');
   const tmpPath = path.join(
     os.tmpdir(),
     `globetrotter-itinerary-test-db-${Date.now()}-${Math.random().toString(36).slice(2)}.json`
@@ -59,28 +34,40 @@ async function createTestApp() {
 
   return {
     app,
-    cleanup: () => new Promise((resolve) => {
-      fs.rmSync(tmpPath, { force: true });
-      recommendationServer.close(resolve);
-    })
+    cleanup: () => fs.rmSync(tmpPath, { force: true })
   };
 }
 
-function makeToken(user) {
-  return jwt.sign(
-    { sub: user.id, name: user.name, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+/**
+ * @param {Array|Error|number} destinations  fixture list (default), an Error to reject with,
+ *                                            or an HTTP status number to fail the call with
+ */
+function installFetchMock(destinations = FIXTURE_DESTINATIONS) {
+  global.fetch = jest.fn(async (url) => {
+    if (!String(url).includes('/api/destinations')) {
+      throw new Error(`unexpected fetch in test: ${url}`);
+    }
+    if (destinations instanceof Error) throw destinations;
+    if (typeof destinations === 'number') {
+      return new Response(JSON.stringify({ error: 'boom' }), { status: destinations });
+    }
+    return new Response(
+      JSON.stringify({ count: destinations.length, results: destinations }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    );
+  });
+  return global.fetch;
+}
+
+function clearFetchMock() {
+  delete global.fetch;
 }
 
 let userCounter = 0;
-
-/** Itinerary Service trusts the JWT alone - no user-service round trip - so "registering" here just mints a token for a fresh fake user id. */
-function fakeUser() {
+function asUser() {
   userCounter += 1;
-  const user = { id: `user-${userCounter}-${Date.now()}`, name: `Test User ${userCounter}`, email: `test${userCounter}@example.com` };
-  return { user, token: makeToken(user) };
+  const id = `user-${userCounter}-${Date.now()}`;
+  return { id, headers: { 'X-User-Id': id } };
 }
 
-module.exports = { createTestApp, fakeUser, FIXTURE_DESTINATIONS };
+module.exports = { createTestApp, installFetchMock, clearFetchMock, asUser, FIXTURE_DESTINATIONS };

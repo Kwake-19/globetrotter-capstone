@@ -1,23 +1,20 @@
 {
   "name": "globetrotter-recommendation-service",
   "version": "1.0.0",
-  "description": "GlobeTrotter Phase 2 - Recommendation Service (destinations, search, recommendations)",
+  "description": "GlobeTrotter Phase 2 - Recommendation Service (personalized suggestions; no local data, reads destinations-service + itinerary-service)",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest --runInBand",
-    "test:watch": "jest --runInBand --watch"
+    "test": "jest --runInBand"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "amqplib": "^0.10.4",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0"
   },
   "devDependencies": {

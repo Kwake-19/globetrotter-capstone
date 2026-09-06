@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>People · GlobeTrotter</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header" id="siteHeader"></header>
+
+<main>
+  <div class="container">
+    <div class="page-head">
+      <h1>People</h1>
+      <p>Follow other travellers to see what they review and where they go.</p>
+    </div>
+
+    <section class="people-section">
+      <h2>Find people</h2>
+      <form class="search-row" id="searchForm">
+        <input type="text" id="searchInput" placeholder="Search by name or username" autocomplete="off" />
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      </form>
+      <div id="searchResults" class="people-list"></div>
+    </section>
+
+    <section class="people-section">
+      <h2>Following</h2>
+      <div id="followingList" class="people-list"></div>
+    </section>
+
+    <section class="people-section">
+      <h2>Followers</h2>
+      <div id="followersList" class="people-list"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer" id="siteFooter"></footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/people.js"></script>
+</body>
+</html>

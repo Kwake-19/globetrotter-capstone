@@ -17,7 +17,7 @@ function createApp() {
   }
 
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', service: 'itinerary-service', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', service: 'itinerary-service' });
   });
 
   app.use('/api/itineraries', itinerariesRoutes);

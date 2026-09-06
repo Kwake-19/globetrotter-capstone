@@ -1,89 +1,86 @@
 # GlobeTrotter — Phase 2: Microservices
 
 Phase 1's monolith (still at the repo root, untouched — see
-[README.md](README.md)) is decomposed here into three independent services
-behind an API Gateway. Same product, same frontend, same JWTs — just split
-along its natural seams: users, itineraries, and destinations/recommendations.
+[README.md](README.md)) is decomposed here into **six independent domain
+services behind an API Gateway**. Same product, same frontend, same JWTs —
+split along its natural seams: auth, destinations, search, itineraries,
+recommendations, and the chatbot.
+
+Phase 2's learning goal is **API design and inter-service communication**,
+so every call between services is a plain `fetch()` over HTTP. There is no
+message queue (that's Phase 4).
 
 ## Architecture
 
 ```
-                        ┌──────────────┐
-                        │  API Gateway │  :4000  (serves public/, proxies /api/*)
-                        └──────┬───────┘
-              ┌────────────────┼────────────────┐
-              ▼                ▼                 ▼
-      ┌───────────────┐ ┌────────────────┐ ┌────────────────────┐
-      │  User Service  │ │Itinerary Service│ │Recommendation Service│
-      │     :4001      │ │      :4002      │ │        :4003         │
-      └───────┬────────┘ └───────┬─────────┘ └──────────┬──────────┘
-              ▼                  ▼                       ▼
-        user-service/     itinerary-service/     recommendation-service/
-         data/db.json       data/db.json              data/db.json
-       ({ users: [] })    ({ itineraries: [] })   ({ destinations: [] })
+                         ┌──────────────┐
+        browser  ───────▶│  API Gateway │ :4000   serves public/, verifies the JWT,
+                         └──────┬───────┘         forwards identity as headers,
+                                │                 502 on a dead upstream
+   ┌───────────┬────────────────┼──────────────┬───────────────┬──────────────┐
+   ▼           ▼                ▼              ▼               ▼              ▼
+┌────────┐ ┌──────────────┐ ┌──────────┐ ┌────────────┐ ┌────────────────┐ ┌──────────┐
+│  auth  │ │ destinations │ │  search  │ │ itinerary  │ │ recommendation │ │ chatbot  │
+│ :4001  │ │    :4002     │ │  :4003   │ │   :4004    │ │     :4005      │ │  :4006   │
+└───┬────┘ └──────┬───────┘ └────┬─────┘ └─────┬──────┘ └───────┬────────┘ └────┬─────┘
+    ▼            ▼              │             │               │              │
+ users.json  destinations.json │             │               │              │
+             (+ reviews)       │             │               │              │
+                               └──▶ destinations  ◀───────────┴──────────────┘  (HTTP)
+                    itinerary ──▶ destinations                 chatbot ──▶ search ──▶ OpenRouter
+                 recommendation ──▶ destinations + itinerary
 ```
 
-| Service | Owns | Endpoints |
+| Service | Owns (data file) | Endpoints it serves |
 |---|---|---|
-| **User Service** | `users` | `/api/auth/*`, `/api/profile` |
-| **Itinerary Service** | `itineraries` | `/api/itineraries/*`, `/api/shared/:shareId` |
-| **Recommendation Service** | `destinations` | `/api/destinations/*`, `/api/recommendations`, `/api/search` |
-| **API Gateway** | nothing (stateless) | serves `public/`, `/api/config`, proxies everything else |
+| **api-gateway** | nothing | serves `public/`, `GET /api/config`, `GET /api/health`, routes everything else |
+| **auth-service** | `users` (`data/users.json`) | `/api/auth/*` (incl. Google Sign-In), `/api/profile` |
+| **destinations-service** | `destinations` + `reviews` (`data/destinations.json`) | `GET /api/destinations`, `/nearby`, `/categories`, `/:id`, `/:id/reviews*`, `/api/admin/destinations*` |
+| **search-service** | nothing | `GET /api/destinations/smart-search`, `GET /api/search` |
+| **itinerary-service** | `itineraries` (`data/itineraries.json`) | `/api/itineraries/*`, `GET /api/shared/:shareId` |
+| **recommendation-service** | nothing | `GET /api/recommendations` |
+| **chatbot-service** | nothing | `POST /api/chatbot` |
 
 Each service is its own Node project (own `package.json`, `Dockerfile`,
-tests) with its **own JSON-file datastore** — same read/write-queue pattern
-Phase 1 used, just one file per service instead of one shared file. No
-service reads another's `data/db.json` directly.
+`.env.example`, tests). The services that own data use the same
+read/write-queue JSON-file store Phase 1 used — one file per service. No
+service reads another's data file.
 
-### Inter-service communication
+## Auth & the trust model
 
-**Synchronous (REST):**
-- Itinerary Service calls Recommendation Service (`GET /api/destinations`)
-  to validate `destinationId`s when creating/editing a trip, and to enrich
-  a shared itinerary's stops with place details (`services/itinerary-service/src/utils/recommendationClient.js`).
-- Recommendation Service calls Itinerary Service (`GET /api/itineraries`,
-  forwarding the caller's own JWT) to personalize `/api/recommendations`
-  for a logged-in user (`services/recommendation-service/src/utils/itineraryClient.js`).
-  If Itinerary Service is unreachable, it degrades to non-personalized
-  results instead of failing the request — a bug in one service shouldn't
-  crash another (see the diagram's "Isolation" benefit).
+- **api-gateway** is the only service reachable from the host (the only one
+  with a `ports:` mapping). It verifies the JWT with `JWT_SECRET`, sets
+  `req.userId` / `req.isAdmin` from the token payload, and — when proxying —
+  forwards identity **as headers**: `X-User-Id`, `X-Is-Admin: true` (omitted
+  entirely for non-admins), and `X-User-Name` (URL-encoded, used by review
+  writes). A client-supplied `X-User-*` header is stripped before proxying.
+- A missing/invalid token is **not** rejected at the gateway — the request
+  proceeds as a guest. Routes that need a user are gated individually
+  (`requireUserId` on `/api/profile`, `/api/itineraries`, review writes;
+  `requireAdmin` on `/api/admin/*`).
+- Downstream services read `x-user-id` / `x-is-admin` / `x-user-name`
+  directly, in the same places the monolith did `req.user.id` / an isAdmin
+  lookup. Trusting these headers is safe **because** no service except the
+  gateway is reachable from outside the Docker network.
+- **auth-service** also holds `JWT_SECRET` (it *signs* the tokens at login)
+  and `GOOGLE_CLIENT_ID` (it verifies Google id tokens). `isAdmin` is added
+  to the token payload at issuance — so granting admin (a manual data edit)
+  only takes effect on the user's next login.
 
-**Asynchronous (RabbitMQ):** when a trip is created or gets new stops,
-Itinerary Service publishes an `itinerary.created` / `itinerary.updated`
-event (`services/itinerary-service/src/events/publisher.js`). Recommendation
-Service consumes it (`services/recommendation-service/src/events/consumer.js`)
-and bumps a `timesAdded` counter on the referenced destinations — a small,
-eventually-consistent read model used as a tie-breaker in ranking. If
-RabbitMQ is down, publishing/consuming just logs a warning and retries in
-the background; it never blocks a request.
+## Inter-service calls (all synchronous `fetch`)
 
-**Auth:** User Service is the only one that issues JWTs. All three
-services share the same `JWT_SECRET` and verify tokens locally — no
-service calls User Service just to check a token.
+| Caller | Callee | Why |
+|---|---|---|
+| search-service | destinations-service | pull the catalogue, then parse + rank in memory |
+| itinerary-service | destinations-service | validate `destinationId`s on create/edit; enrich the shared view |
+| recommendation-service | destinations-service | the catalogue to rank (hard dependency → 503 if down) |
+| recommendation-service | itinerary-service | the user's trips, for personalization (soft dependency → falls back to popular) |
+| chatbot-service | search-service | turn the message into suggested places |
+| chatbot-service | OpenRouter | the conversational reply (falls back to a templated reply without a key) |
 
-## Running locally (no Docker)
-
-Each service needs its own `npm install` and its own `.env` (copy each
-`.env.example`). Start all four in separate terminals:
-
-```bash
-cd services/user-service && npm install && cp .env.example .env && npm run dev
-cd services/itinerary-service && npm install && cp .env.example .env && npm run dev
-cd services/recommendation-service && npm install && cp .env.example .env && npm run dev
-cd services/gateway && npm install && cp .env.example .env && npm run dev
-```
-
-Make sure `JWT_SECRET` is the **same value** in all three backend
-services' `.env` files. RabbitMQ is optional for local dev — without it,
-Itinerary/Recommendation Service log a warning and keep working; only the
-`timesAdded` popularity counter won't update. To run one locally:
-
-```bash
-docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management-alpine
-```
-
-Visit `http://localhost:4000` — the gateway serves the same frontend as
-Phase 1 unchanged (it talks to `/api/...` on its own origin either way).
+Every inter-service call has explicit error handling: a dead/erroring
+dependency becomes a clear `503` (or a graceful degrade where the feature
+allows it), never a crash.
 
 ## Running with Docker Compose
 
@@ -91,53 +88,66 @@ Phase 1 unchanged (it talks to `/api/...` on its own origin either way).
 JWT_SECRET=$(openssl rand -hex 32) docker compose -f docker-compose.phase2.yml up --build
 ```
 
-Brings up RabbitMQ + all four services on one Docker network. Visit
-`http://localhost:4000`. RabbitMQ's management UI is at
-`http://localhost:15672` (guest/guest). Each service's `data/` folder is
-bind-mounted so its JSON store survives rebuilds, same as Phase 1.
+Then open **http://localhost:4000** — the gateway serves the same Phase 1
+frontend, unchanged. Only the gateway is published to the host; the other
+six are reachable only by container name on the `globetrotter` network.
+Each data-owning service bind-mounts its `data/` folder so its JSON store
+survives rebuilds.
 
-Phase 1's `docker-compose.yml` still works standalone on port 4001 — the
-two don't conflict as long as you don't run both at once (or just note
-Phase 2's gateway is on 4000).
+Optional keys (all features degrade cleanly without them): `GOOGLE_CLIENT_ID`,
+`GOOGLE_MAPS_EMBED_KEY`, `OPENROUTER_API_KEY` (+ `OPENROUTER_MODEL`,
+`OPENROUTER_FALLBACK_MODEL`), `GROQ_API_KEY`, `CHATBOT_OPENROUTER_API_KEY`.
+
+Phase 1's own `docker-compose.yml` is untouched and still runs standalone
+on port 4001 — the two don't conflict (just don't expect to run both on the
+same ports at once).
+
+## Running locally (no Docker)
+
+Each service needs its own `npm install` and `.env` (copy its
+`.env.example`). Start them in separate terminals — `JWT_SECRET` must be the
+**same value** in `api-gateway` and `auth-service`:
+
+```bash
+cd services/auth-service           && npm install && cp .env.example .env && npm run dev
+cd services/destinations-service   && npm install && cp .env.example .env && npm run dev
+cd services/search-service         && npm install && cp .env.example .env && npm run dev
+cd services/itinerary-service      && npm install && cp .env.example .env && npm run dev
+cd services/recommendation-service && npm install && cp .env.example .env && npm run dev
+cd services/chatbot-service        && npm install && cp .env.example .env && npm run dev
+cd services/api-gateway            && npm install && cp .env.example .env && npm run dev
+```
+
+The `.env.example` files default every `*_SERVICE_URL` to `localhost:<port>`
+for exactly this.
 
 ## Testing
 
-Each service has its own Jest + Supertest suite, run independently:
+Every service has its own Jest + Supertest suite and is runnable in
+isolation — search/recommendation/chatbot **mock** their `fetch` calls to
+other services:
 
 ```bash
-cd services/user-service && npm test
-cd services/itinerary-service && npm test
-cd services/recommendation-service && npm test
-cd services/gateway && npm test
+cd services/<name> && npm install && npm test
 ```
 
-Itinerary Service's and Recommendation Service's tests use
-[`nock`](https://github.com/nock/nock) to stub the other service's HTTP
-responses, so no other service needs to be running for a single service's
-tests to pass.
+The repo-root `npm test` still runs only the Phase 1 monolith suite
+(`jest.config.js` now ignores `services/`).
 
-## What changed vs. Phase 1
+## Health checks
 
-- One JSON file → three, one per service, each owned exclusively by that
-  service.
-- One Express app → four (three domain services + a gateway), each
-  independently startable, testable and deployable.
-- Direct in-process function calls between "destinations" and
-  "itineraries" logic → real network calls (REST + one async event).
-- `/api/config` and `/api/health` moved to the gateway (not owned by any
-  single domain).
+Every service exposes `GET /api/health` → `{ "status": "ok", "service": "<name>" }`,
+and every `Dockerfile` has a `HEALTHCHECK` hitting it. `depends_on` in the
+compose file waits on `service_healthy` so the gateway only starts once its
+dependencies are up.
 
 ## Known Phase 2 limitations (by design)
 
-- Still JSON-file storage, not a real database — Phase 2 is about service
-  boundaries, not persistence technology.
-- No service discovery — service URLs are hardcoded via env vars, which is
-  fine for a fixed docker-compose network but wouldn't scale to services
-  that come and go dynamically.
-- No circuit breakers/retries beyond the one fallback in `/api/recommendations`
-  — that's Phase 4 (Resilience).
-- No distributed tracing — a request spanning gateway → recommendation → itinerary
-  has no shared trace/correlation ID yet, so debugging across services
-  means reading each one's logs separately.
-- Single VM/Docker Compose, not containers behind a load balancer — that's
-  Phase 3.
+- JSON-file storage, not a database — Phase 2 is about service boundaries.
+- Service URLs are hardcoded via env vars — no service discovery.
+- No circuit breakers / retries beyond the recommendation soft-fallback —
+  that's Phase 4 (Resilience).
+- No distributed tracing / correlation IDs — debugging a
+  gateway → chatbot → search → destinations chain means reading each log.
+- Single Docker Compose network, not containers behind a load balancer —
+  that's Phase 3.

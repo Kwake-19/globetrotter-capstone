@@ -1,5 +1,9 @@
+/**
+ * Catches anything thrown / passed to next(err) so a bug in one endpoint
+ * returns a clean JSON error instead of crashing the service.
+ */
 function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
-  console.error(`[recommendation-service] [error] ${req.method} ${req.originalUrl} -`, err);
+  console.error(`[error] ${req.method} ${req.originalUrl} -`, err);
   const status = err.status || 500;
   res.status(status).json({
     error: status === 500 ? 'Something went wrong on our end.' : err.message

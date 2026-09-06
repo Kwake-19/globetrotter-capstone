@@ -57,4 +57,17 @@ async function registerUser(app, overrides = {}) {
   return { res, token: res.body.token, user: res.body.user, credentials: payload };
 }
 
-module.exports = { createTestApp, registerUser };
+/** `actor` follows `targetUserId` (one direction). `actor` is a registerUser() result. */
+async function follow(app, actor, targetUserId) {
+  return request(app)
+    .post(`/api/users/${targetUserId}/follow`)
+    .set('Authorization', `Bearer ${actor.token}`);
+}
+
+/** Makes `a` and `b` (both registerUser() results) follow each other. */
+async function mutualFollow(app, a, b) {
+  await follow(app, a, b.user.id);
+  await follow(app, b, a.user.id);
+}
+
+module.exports = { createTestApp, registerUser, follow, mutualFollow };

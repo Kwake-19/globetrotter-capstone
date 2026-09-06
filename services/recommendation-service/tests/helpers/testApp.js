@@ -1,92 +1,67 @@
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const http = require('http');
-const jwt = require('jsonwebtoken');
-
 /**
- * A real (but tiny, in-process) HTTP server standing in for the Itinerary
- * Service - fetch-mocking libraries (nock, undici's MockAgent) don't
- * reliably intercept global fetch under Jest's node test environment, so a
- * real server on an ephemeral localhost port is used instead. `responses`
- * maps an `Authorization` header value to the itineraries that token
- * should get back; a token with no entry gets a 500, simulating the
- * Itinerary Service being unavailable/erroring.
+ * recommendation-service owns no data. It calls destinations-service and
+ * itinerary-service over global fetch; per the Phase 2 brief both are
+ * MOCKED here. installFetchMock() routes by URL:
+ *   .../api/destinations  -> fixture catalog (or a failure)
+ *   .../api/itineraries   -> the itineraries for the X-User-Id header
  */
-function startItineraryServiceStub(responses) {
-  return new Promise((resolve) => {
-    const server = http.createServer((req, res) => {
-      if (req.method === 'GET' && req.url === '/api/itineraries') {
-        const itineraries = responses.get(req.headers.authorization);
-        if (itineraries) {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ count: itineraries.length, results: itineraries }));
-          return;
-        }
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'boom' }));
-        return;
-      }
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'not found' }));
-    });
-    server.listen(0, '127.0.0.1', () => resolve(server));
-  });
-}
 
-/**
- * Every test file gets its own temp copy of the seed destinations DB and
- * its own stub server. Recommendation Service verifies JWTs locally (same
- * shared secret as user-service, no round trip needed), so tests can mint
- * a token directly with makeToken() instead of registering a real user.
- */
-async function createTestApp() {
-  process.env.NODE_ENV = 'test';
-  process.env.JWT_SECRET = 'test-only-secret-do-not-use-in-prod';
-  process.env.RABBITMQ_URL = 'amqp://127.0.0.1:1'; // deliberately unreachable in tests; consumer isn't started
+process.env.NODE_ENV = 'test';
+process.env.DESTINATIONS_SERVICE_URL = 'http://destinations-service:4002';
+process.env.ITINERARY_SERVICE_URL = 'http://itinerary-service:4004';
 
-  const responses = new Map();
-  const itineraryServer = await startItineraryServiceStub(responses);
-  const { port } = itineraryServer.address();
-  process.env.ITINERARY_SERVICE_URL = `http://127.0.0.1:${port}`;
+const FIXTURE_DESTINATIONS = [
+  { id: 'r1', name: 'Resto One', category: 'restaurant', rating: 4.8 },
+  { id: 'r2', name: 'Resto Two', category: 'restaurant', rating: 4.2 },
+  { id: 'h1', name: 'Hotel One', category: 'hotel', rating: 4.6 },
+  { id: 'h2', name: 'Hotel Two', category: 'hotel', rating: 4.0 },
+  { id: 'm1', name: 'Mall One', category: 'mall', rating: 4.5 },
+  { id: 'f1', name: 'Fun One', category: 'fun_place', rating: 4.7 }
+];
 
-  const seedPath = path.join(__dirname, '..', '..', 'data', 'db.json');
-  const tmpPath = path.join(
-    os.tmpdir(),
-    `globetrotter-recommendation-test-db-${Date.now()}-${Math.random().toString(36).slice(2)}.json`
-  );
-  fs.copyFileSync(seedPath, tmpPath);
-  process.env.DB_FILE = tmpPath;
-
+function createTestApp() {
   jest.resetModules();
   const { createApp } = require('../../src/app');
-  const app = createApp();
-
-  return {
-    app,
-    cleanup: () => new Promise((resolve) => {
-      fs.rmSync(tmpPath, { force: true });
-      itineraryServer.close(resolve);
-    }),
-    /** Stubs Itinerary Service's GET /api/itineraries for the given token. */
-    mockUserItineraries: (token, itineraries) => responses.set(`Bearer ${token}`, itineraries)
-  };
+  return { app: createApp() };
 }
 
-function makeToken(user) {
-  return jwt.sign(
-    { sub: user.id, name: user.name, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+/**
+ * @param {object} opts
+ * @param {Array|Error|number} opts.destinations
+ * @param {Object<string,Array>|Error|number} opts.itinerariesByUser  map of X-User-Id -> itineraries
+ */
+function installFetchMock(opts = {}) {
+  const { destinations = FIXTURE_DESTINATIONS, itinerariesByUser = {} } = opts;
+
+  global.fetch = jest.fn(async (url, init) => {
+    const u = String(url);
+
+    if (u.includes('/api/destinations')) {
+      if (destinations instanceof Error) throw destinations;
+      if (typeof destinations === 'number') return new Response('{}', { status: destinations });
+      return new Response(JSON.stringify({ count: destinations.length, results: destinations }), {
+        status: 200, headers: { 'content-type': 'application/json' }
+      });
+    }
+
+    if (u.includes('/api/itineraries')) {
+      if (itinerariesByUser instanceof Error) throw itinerariesByUser;
+      if (typeof itinerariesByUser === 'number') return new Response('{}', { status: itinerariesByUser });
+      const userId = init && init.headers && init.headers['X-User-Id'];
+      const list = itinerariesByUser[userId] || [];
+      return new Response(JSON.stringify({ count: list.length, results: list }), {
+        status: 200, headers: { 'content-type': 'application/json' }
+      });
+    }
+
+    throw new Error(`unexpected fetch in test: ${u}`);
+  });
+
+  return global.fetch;
 }
 
-let userCounter = 0;
-
-function fakeUser() {
-  userCounter += 1;
-  const user = { id: `user-${userCounter}-${Date.now()}`, name: `Test User ${userCounter}`, email: `test${userCounter}@example.com` };
-  return { user, token: makeToken(user) };
+function clearFetchMock() {
+  delete global.fetch;
 }
 
-module.exports = { createTestApp, fakeUser };
+module.exports = { createTestApp, installFetchMock, clearFetchMock, FIXTURE_DESTINATIONS };

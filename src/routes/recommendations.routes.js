@@ -2,8 +2,60 @@ const express = require('express');
 const { readDB } = require('../utils/dataStore');
 const { optionalAuth } = require('../middleware/auth');
 const { computeCategoryCounts, rankByCategoryAffinity } = require('../utils/personalization');
+const { ensureSocialArrays, followingIds } = require('../utils/social');
 
 const router = express.Router();
+
+const FROM_FOLLOWING_LIMIT = 8;
+
+/**
+ * "From people you follow": destinations that accounts the current user
+ * follows have reviewed, or added to an itinerary they've shared publicly.
+ * Ranked by how many distinct followed users touched the place, then rating.
+ * `excludeIds` drops places the user already has in their own itineraries.
+ */
+function computeFromFollowing(db, userId, excludeIds) {
+  ensureSocialArrays(db);
+  const following = new Set(followingIds(db, userId));
+  if (following.size === 0) return [];
+
+  const usersById = Object.fromEntries(db.users.map((u) => [u.id, u]));
+  const destinationsById = Object.fromEntries(db.destinations.map((d) => [d.id, d]));
+  const actorsByDestination = new Map(); // destId -> Map(actorId -> "reviewed"|"added")
+
+  const touch = (destId, actorId, action) => {
+    if (!actorsByDestination.has(destId)) actorsByDestination.set(destId, new Map());
+    const actors = actorsByDestination.get(destId);
+    // "reviewed" is the stronger signal - never downgrade it to "added".
+    if (action === 'reviewed' || !actors.has(actorId)) actors.set(actorId, action);
+  };
+
+  (db.reviews || []).forEach((r) => {
+    if (following.has(r.userId)) touch(r.destinationId, r.userId, 'reviewed');
+  });
+  (db.itineraries || []).forEach((it) => {
+    if (!following.has(it.userId) || !it.shareId) return;
+    it.items.forEach((item) => touch(item.destinationId, it.userId, 'added'));
+  });
+
+  const entries = [];
+  actorsByDestination.forEach((actors, destId) => {
+    if (excludeIds && excludeIds.has(destId)) return;
+    const destination = destinationsById[destId];
+    if (!destination) return;
+    const followedBy = [...actors.entries()].map(([actorId, action]) => {
+      const u = usersById[actorId];
+      return { id: actorId, name: u ? u.name : null, username: u ? u.username : null, action };
+    });
+    entries.push({ ...destination, followedBy });
+  });
+
+  entries.sort((a, b) => (
+    b.followedBy.length - a.followedBy.length
+    || (b.rating || 0) - (a.rating || 0)
+  ));
+  return entries.slice(0, FROM_FOLLOWING_LIMIT);
+}
 
 /**
  * Very small recommendation algorithm for Phase 1:
@@ -45,16 +97,19 @@ router.get('/', optionalAuth, async (req, res, next) => {
     if (!req.user) {
       return res.json({
         personalized: false,
-        results: topRatedAcrossCategories(db.destinations, limit)
+        results: topRatedAcrossCategories(db.destinations, limit),
+        fromFollowing: []
       });
     }
 
     const { categoryCounts, visitedIds } = computeCategoryCounts(db, req.user.id);
+    const fromFollowing = computeFromFollowing(db, req.user.id, visitedIds);
 
     if (visitedIds.size === 0) {
       return res.json({
         personalized: false,
-        results: topRatedAcrossCategories(db.destinations, limit)
+        results: topRatedAcrossCategories(db.destinations, limit),
+        fromFollowing
       });
     }
 
@@ -64,7 +119,8 @@ router.get('/', optionalAuth, async (req, res, next) => {
     return res.json({
       personalized: true,
       basedOnCategories: Object.keys(categoryCounts),
-      results: ranked.slice(0, limit)
+      results: ranked.slice(0, limit),
+      fromFollowing
     });
   } catch (err) {
     return next(err);

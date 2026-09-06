@@ -12,6 +12,9 @@ const profileRoutes = require('./routes/profile.routes');
 const configRoutes = require('./routes/config.routes');
 const searchRoutes = require('./routes/search.routes');
 const adminRoutes = require('./routes/admin.routes');
+const followsRoutes = require('./routes/follows.routes');
+const feedRoutes = require('./routes/feed.routes');
+const conversationsRoutes = require('./routes/conversations.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 function createApp() {
@@ -43,6 +46,12 @@ function createApp() {
   app.use('/api/config', configRoutes);
   app.use('/api/search', searchRoutes);
   app.use('/api/admin', adminRoutes);
+
+  // Social layer: follows (/api/users*, /api/follows*), activity feed, and
+  // 1-to-1 messaging (REST side; realtime lives in src/realtime.js).
+  app.use('/api', followsRoutes);
+  app.use('/api/feed', feedRoutes);
+  app.use('/api/conversations', conversationsRoutes);
 
   // Anything under /api that didn't match becomes a JSON 404 instead of HTML.
   app.use('/api', notFound);

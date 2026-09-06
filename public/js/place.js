@@ -72,12 +72,62 @@
       <div class="review-card">
         <div class="review-card__head">
           <span class="review-card__stars">${starDisplay(review.rating)}</span>
-          <span class="review-card__author">${GT.escapeHtml(review.userName)}</span>
+          <span class="review-card__author" data-user-id="${GT.escapeHtml(review.userId)}">${GT.escapeHtml(review.userName)}</span>
           <span class="review-card__date">${date}</span>
         </div>
         <p class="review-card__text">${GT.escapeHtml(review.text)}</p>
       </div>
     `;
+  }
+
+  /**
+   * After the reviews list is in the DOM, add a Follow / Following button next
+   * to each review author that isn't the current user, using one batched
+   * follow-status lookup.
+   */
+  async function wireReviewAuthorFollows() {
+    if (!GT.getToken()) return;
+    const me = GT.getUser();
+    const authorEls = [...document.querySelectorAll('.review-card__author[data-user-id]')]
+      .filter((el) => el.dataset.userId && el.dataset.userId !== (me && me.id));
+    if (authorEls.length === 0) return;
+
+    const ids = [...new Set(authorEls.map((el) => el.dataset.userId))];
+    let status;
+    try {
+      ({ status } = await GT.api(`/follows/status?ids=${encodeURIComponent(ids.join(','))}`));
+    } catch (err) {
+      return;
+    }
+
+    authorEls.forEach((el) => {
+      if (el.querySelector('.follow-btn')) return;
+      const userId = el.dataset.userId;
+      const following = !!(status[userId] && status[userId].youFollow);
+
+      const btn = document.createElement('button');
+      btn.className = `follow-btn btn btn-sm${following ? ' follow-btn--following' : ' btn-primary'}`;
+      btn.dataset.following = following ? '1' : '0';
+      btn.textContent = following ? 'Following' : 'Follow';
+      btn.addEventListener('click', async () => {
+        const isFollowing = btn.dataset.following === '1';
+        btn.disabled = true;
+        try {
+          await GT.api(`/users/${encodeURIComponent(userId)}/follow`, { method: isFollowing ? 'DELETE' : 'POST' });
+          const nowFollowing = !isFollowing;
+          btn.dataset.following = nowFollowing ? '1' : '0';
+          btn.textContent = nowFollowing ? 'Following' : 'Follow';
+          btn.classList.toggle('follow-btn--following', nowFollowing);
+          btn.classList.toggle('btn-primary', !nowFollowing);
+        } catch (err) {
+          window.alert(err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+      el.insertAdjacentText('beforeend', ' ');
+      el.appendChild(btn);
+    });
   }
 
   /** The review submit/edit form. `existing` is null for a fresh review, or the user's own review to edit. */
@@ -155,6 +205,8 @@
       </div>
       <div id="reviewFormWrap"></div>
     `;
+
+    wireReviewAuthorFollows();
 
     function showMyReviewCallout() {
       renderReviewsSection(place);
@@ -297,8 +349,10 @@
       ${amenitiesBlock}
       <div class="place-detail__actions">
         <button class="btn btn-primary" id="addBtn">Add to trip</button>
+        ${GT.getToken() ? '<button class="btn btn-outline" id="shareFriendBtn">Share with…</button>' : ''}
         <a class="btn btn-outline" href="/app.html">Back to Browse</a>
       </div>
+      <div id="sharePickerWrap"></div>
       <section class="map-section" id="locationSection"></section>
       <section class="reviews-section" id="reviewsSection"></section>
     `;
@@ -317,8 +371,57 @@
       addBtn.disabled = true;
     });
 
+    wireSharePicker(place);
+
     renderLocationSection(place);
     renderReviewsSection(place);
+  }
+
+  /** "Share with…" - picks a mutual-follow friend and DMs them this place. */
+  function wireSharePicker(place) {
+    const btn = document.getElementById('shareFriendBtn');
+    if (!btn) return;
+    const wrap = document.getElementById('sharePickerWrap');
+
+    btn.addEventListener('click', async () => {
+      if (!wrap.classList.contains('hidden') && wrap.innerHTML) {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.className = 'friend-picker';
+      wrap.innerHTML = 'Loading…';
+      let recipients;
+      try {
+        ({ results: recipients } = await GT.api('/conversations/recipients'));
+      } catch (err) {
+        wrap.innerHTML = `<span class="form-error">${GT.escapeHtml(err.message)}</span>`;
+        return;
+      }
+      if (!recipients.length) {
+        wrap.innerHTML = 'You can only message people you <a href="/people.html">both follow</a>.';
+        return;
+      }
+      wrap.innerHTML = '';
+      recipients.forEach((u) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-outline btn-sm';
+        b.textContent = `@${u.username}`;
+        b.addEventListener('click', async () => {
+          b.disabled = true;
+          try {
+            await GT.api('/conversations/messages', {
+              method: 'POST',
+              body: JSON.stringify({ toUserId: u.id, type: 'place', destinationId: place.id })
+            });
+            wrap.innerHTML = `<span class="form-success">Sent to @${GT.escapeHtml(u.username)}.</span>`;
+          } catch (err) {
+            b.disabled = false;
+            wrap.insertAdjacentHTML('beforeend', `<span class="form-error">${GT.escapeHtml(err.message)}</span>`);
+          }
+        });
+        wrap.appendChild(b);
+      });
+    });
   }
 
   const id = new URLSearchParams(window.location.search).get('id');

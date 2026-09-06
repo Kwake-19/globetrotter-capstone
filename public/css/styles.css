@@ -705,3 +705,142 @@ a:hover { color: var(--accent); }
   .site-header__inner { flex-wrap: wrap; }
   .nav-links { order: 3; width: 100%; justify-content: flex-start; }
 }
+
+/* ---------------------------------------------------------------------- */
+/* Social layer: people, feed, follow strip, messaging                     */
+/* ---------------------------------------------------------------------- */
+
+.follow-btn { cursor: pointer; }
+.follow-btn--following {
+  background: var(--surface); color: var(--ink-soft); border-color: var(--border);
+}
+
+/* People page ---------------------------------------------------------- */
+.people-section { margin-bottom: 34px; }
+.people-list { display: flex; flex-direction: column; gap: 10px; }
+.person-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+}
+.person-row__id { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.person-row__name { font-weight: 600; }
+.person-row__handle { color: var(--ink-soft); font-size: 13px; }
+.person-row__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Review-author follow button --------------------------------------- */
+.review-card__author .follow-btn { margin-left: 8px; padding: 3px 10px; font-size: 12px; }
+
+/* Feed --------------------------------------------------------------- */
+.feed-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 56px; }
+.feed-item {
+  display: flex; gap: 14px; padding: 14px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--bg);
+}
+.feed-item:hover { border-color: var(--accent); }
+.feed-item__thumb {
+  width: 72px; height: 72px; border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0;
+  background: var(--surface);
+}
+.feed-item__thumb--empty { background: var(--surface); }
+.feed-item__thumb--trip {
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+}
+.feed-item__body { min-width: 0; }
+.feed-item__line { color: var(--ink); }
+.feed-item__stars { color: var(--accent); font-size: 13px; }
+.feed-item__snippet {
+  color: var(--ink-soft); font-size: 13.5px; margin: 4px 0;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.feed-item__meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); }
+
+/* "From people you follow" strip on Browse ------------------------- */
+.follow-strip { margin: 8px 0 28px; }
+.follow-strip__title { font-size: 16px; margin-bottom: 12px; }
+.follow-strip__row {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+}
+.follow-strip__card {
+  flex: 0 0 190px; border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; background: var(--bg);
+}
+.follow-strip__card:hover { border-color: var(--accent); }
+.follow-strip__img, .follow-strip__img-fallback {
+  width: 100%; height: 110px; object-fit: cover; display: block; background: var(--surface);
+}
+.follow-strip__img-fallback {
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ink-soft);
+}
+.follow-strip__body { padding: 10px 12px; }
+.follow-strip__name { display: block; font-weight: 600; font-size: 14px; }
+.follow-strip__who { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+
+/* Share-with-a-friend inline picker ------------------------------- */
+.friend-picker {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-top: 12px; max-width: 560px;
+}
+
+/* Messages ---------------------------------------------------------- */
+.messages-layout {
+  display: flex; gap: 20px; align-items: stretch;
+  min-height: 60vh; padding-bottom: 48px;
+}
+.conversation-pane {
+  flex: 0 0 300px; display: flex; flex-direction: column; gap: 12px;
+  border-right: 1px solid var(--border); padding-right: 20px;
+}
+.conversation-pane__head { display: flex; align-items: center; justify-content: space-between; }
+.conversation-pane__head h1 { font-size: 22px; margin: 0; }
+.conversation-list { display: flex; flex-direction: column; gap: 6px; }
+.conversation-row {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  width: 100%; text-align: left; padding: 10px 12px; cursor: pointer;
+  border: 1px solid transparent; border-radius: var(--radius); background: none;
+  font-family: inherit; position: relative;
+}
+.conversation-row:hover { background: var(--surface); }
+.conversation-row--active { border-color: var(--border); background: var(--surface); }
+.conversation-row__name { font-weight: 600; font-size: 14px; }
+.conversation-row__preview {
+  font-size: 12.5px; color: var(--ink-soft);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.unread-dot {
+  position: absolute; top: 12px; right: 12px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+.chat-pane { flex: 1; display: flex; min-width: 0; }
+.chat-pane__empty { margin: auto; color: var(--ink-soft); }
+.chat-pane__active { display: flex; flex-direction: column; width: 100%; gap: 12px; }
+.chat-pane__head { display: flex; align-items: center; gap: 12px; }
+.chat-pane__title { font-weight: 600; }
+.chat-back { display: none; }
+.chat-thread {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  padding: 8px 4px; min-height: 300px; max-height: 56vh;
+}
+.chat-bubble {
+  max-width: 75%; padding: 9px 13px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 14px; line-height: 1.4; word-break: break-word; align-self: flex-start;
+}
+.chat-bubble--mine { align-self: flex-end; background: var(--accent); color: #fff; border-color: var(--accent); }
+.chat-preview-card {
+  display: flex; gap: 10px; align-items: center; text-decoration: none;
+}
+.chat-preview-card img { width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover; }
+.chat-preview-card small { opacity: 0.75; font-size: 11px; }
+.chat-preview-card__icon { font-size: 22px; }
+.chat-bubble--mine.chat-preview-card { color: #fff; }
+.chat-compose { display: flex; gap: 8px; }
+.chat-compose input { flex: 1; }
+.chat-error { min-height: 16px; }
+
+@media (max-width: 760px) {
+  .messages-layout { flex-direction: column; }
+  .conversation-pane { flex-basis: auto; border-right: none; padding-right: 0; }
+  .chat-back { display: inline; }
+  .messages-layout--thread-open .conversation-pane { display: none; }
+  .messages-layout:not(.messages-layout--thread-open) .chat-pane { display: none; }
+}

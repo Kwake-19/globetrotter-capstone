@@ -134,11 +134,13 @@
       </div>
       ${banner}
       <div class="trip-detail__actions">
-        <button class="btn ${justSaved ? 'btn-primary' : 'btn-outline'}" id="shareBtn">Share</button>
+        <button class="btn ${justSaved ? 'btn-primary' : 'btn-outline'}" id="shareBtn">Share link</button>
+        <button class="btn btn-outline" id="shareFriendBtn">Share with…</button>
         <a class="btn btn-outline" href="/trip-builder.html?editId=${itinerary.id}">Edit</a>
         <button class="btn btn-danger" id="deleteBtn">Delete</button>
       </div>
       <div id="shareBoxWrap"></div>
+      <div id="friendShareWrap"></div>
       <div class="stop-list" id="stopList"></div>
       <section class="map-section hidden" id="tripMapSection"></section>
     `;
@@ -196,6 +198,47 @@
       if (!window.confirm('Delete this itinerary? This cannot be undone.')) return;
       await GT.api(`/itineraries/${itinerary.id}`, { method: 'DELETE' });
       window.location.href = '/my-trips.html';
+    });
+
+    document.getElementById('shareFriendBtn').addEventListener('click', async () => {
+      const wrap = document.getElementById('friendShareWrap');
+      if (!wrap.classList.contains('hidden') && wrap.innerHTML) {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.className = 'friend-picker';
+      wrap.innerHTML = 'Loading…';
+      let recipients;
+      try {
+        ({ results: recipients } = await GT.api('/conversations/recipients'));
+      } catch (err) {
+        wrap.innerHTML = `<span class="field__error">${GT.escapeHtml(err.message)}</span>`;
+        return;
+      }
+      if (!recipients.length) {
+        wrap.innerHTML = 'You can only message people you <a href="/people.html">both follow</a>.';
+        return;
+      }
+      wrap.innerHTML = '';
+      recipients.forEach((u) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-outline btn-sm';
+        b.textContent = `@${u.username}`;
+        b.addEventListener('click', async () => {
+          b.disabled = true;
+          try {
+            await GT.api('/conversations/messages', {
+              method: 'POST',
+              body: JSON.stringify({ toUserId: u.id, type: 'itinerary', itineraryId: itinerary.id })
+            });
+            wrap.innerHTML = `<span class="form-success">Sent to @${GT.escapeHtml(u.username)}.</span>`;
+          } catch (err) {
+            b.disabled = false;
+            wrap.insertAdjacentHTML('beforeend', `<span class="field__error">${GT.escapeHtml(err.message)}</span>`);
+          }
+        });
+        wrap.appendChild(b);
+      });
     });
   }
 

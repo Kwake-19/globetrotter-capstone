@@ -231,6 +231,9 @@
     { key: 'app', href: '/app.html', label: 'Browse' },
     { key: 'trip-builder', href: '/trip-builder.html', label: 'Build Itinerary', badge: true },
     { key: 'my-trips', href: '/my-trips.html', label: 'My Trips' },
+    { key: 'feed', href: '/feed.html', label: 'Feed' },
+    { key: 'messages', href: '/messages.html', label: 'Messages' },
+    { key: 'people', href: '/people.html', label: 'People' },
     { key: 'profile', href: '/profile.html', label: 'Profile' }
   ];
 

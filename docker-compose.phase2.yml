@@ -1,38 +1,99 @@
-# Phase 2 - Microservices. Brings up the API Gateway, three services and
-# RabbitMQ on one Docker network, all on a single VM/host.
+# GlobeTrotter - Phase 2 (Microservices)
 #
 #   docker compose -f docker-compose.phase2.yml up --build
+#   then open http://localhost:4000  (same frontend as Phase 1)
 #
-# Then visit http://localhost:4000 - the same frontend as Phase 1, now
-# served by the gateway and backed by three independent services instead
-# of one monolith. Phase 1's own `docker-compose.yml` is untouched, so both
-# phases can still be run (on different ports) and graded independently.
+# Phase 1's own docker-compose.yml is untouched - both can run side by side
+# (Phase 1 on 4001, Phase 2's gateway on 4000).
+#
+# TRUST BOUNDARY: api-gateway is the ONLY service with a `ports:` mapping,
+# so it is the only thing reachable from the host. Every other service is
+# reachable solely by container name on the internal `globetrotter` network.
+# The gateway verifies the JWT and forwards the caller's identity to the
+# services as X-User-Id / X-Is-Admin / X-User-Name headers; the services
+# trust those headers precisely BECAUSE nothing outside Docker can reach
+# them to forge one. JWT_SECRET and GOOGLE_CLIENT_ID live only where they
+# are actually needed: the gateway (verify + frontend config) and
+# auth-service (sign tokens + verify Google id tokens).
+
 services:
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: globetrotter-rabbitmq
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: globetrotter-api-gateway
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # management UI - http://localhost:15672 (guest/guest)
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "4000:4000" # the ONLY port exposed to the host
+    environment:
+      - PORT=4000
+      - CORS_ORIGIN=*
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_MAPS_EMBED_KEY=${GOOGLE_MAPS_EMBED_KEY:-}
+      - AUTH_SERVICE_URL=http://auth-service:4001
+      - DESTINATIONS_SERVICE_URL=http://destinations-service:4002
+      - SEARCH_SERVICE_URL=http://search-service:4003
+      - ITINERARY_SERVICE_URL=http://itinerary-service:4004
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:4005
+      - CHATBOT_SERVICE_URL=http://chatbot-service:4006
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      destinations-service:
+        condition: service_healthy
+      search-service:
+        condition: service_healthy
+      itinerary-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+      chatbot-service:
+        condition: service_healthy
     restart: unless-stopped
     networks: [globetrotter]
 
-  user-service:
-    build: ./services/user-service
-    container_name: globetrotter-user-service
+  auth-service:
+    build: ./services/auth-service
+    container_name: globetrotter-auth-service
     environment:
       - PORT=4001
+      - CORS_ORIGIN=*
+      - DB_FILE=./data/users.json
       - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
       - JWT_EXPIRES_IN=7d
-      - DB_FILE=./data/db.json
-      - CORS_ORIGIN=*
+      - JWT_REMEMBER_EXPIRES_IN=30d
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     volumes:
-      - ./services/user-service/data:/usr/src/app/data
+      - ./services/auth-service/data:/usr/src/app/data
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  destinations-service:
+    build: ./services/destinations-service
+    container_name: globetrotter-destinations-service
+    environment:
+      - PORT=4002
+      - CORS_ORIGIN=*
+      - DB_FILE=./data/destinations.json
+    volumes:
+      - ./services/destinations-service/data:/usr/src/app/data
+    restart: unless-stopped
+    networks: [globetrotter]
+
+  search-service:
+    build: ./services/search-service
+    container_name: globetrotter-search-service
+    environment:
+      - PORT=4003
+      - CORS_ORIGIN=*
+      - DESTINATIONS_SERVICE_URL=http://destinations-service:4002
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-meta-llama/llama-3.3-70b-instruct:free}
+      - OPENROUTER_FALLBACK_MODEL=${OPENROUTER_FALLBACK_MODEL:-openrouter/free}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    depends_on:
+      destinations-service:
+        condition: service_healthy
     restart: unless-stopped
     networks: [globetrotter]
 
@@ -40,18 +101,14 @@ services:
     build: ./services/itinerary-service
     container_name: globetrotter-itinerary-service
     environment:
-      - PORT=4002
-      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
-      - DB_FILE=./data/db.json
+      - PORT=4004
       - CORS_ORIGIN=*
-      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:4003
-      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - DB_FILE=./data/itineraries.json
+      - DESTINATIONS_SERVICE_URL=http://destinations-service:4002
     volumes:
       - ./services/itinerary-service/data:/usr/src/app/data
     depends_on:
-      recommendation-service:
-        condition: service_started
-      rabbitmq:
+      destinations-service:
         condition: service_healthy
     restart: unless-stopped
     networks: [globetrotter]
@@ -60,39 +117,30 @@ services:
     build: ./services/recommendation-service
     container_name: globetrotter-recommendation-service
     environment:
-      - PORT=4003
-      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me}
-      - DB_FILE=./data/db.json
+      - PORT=4005
       - CORS_ORIGIN=*
-      - ITINERARY_SERVICE_URL=http://itinerary-service:4002
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - GROQ_API_KEY=${GROQ_API_KEY:-}
-    volumes:
-      - ./services/recommendation-service/data:/usr/src/app/data
+      - DESTINATIONS_SERVICE_URL=http://destinations-service:4002
+      - ITINERARY_SERVICE_URL=http://itinerary-service:4004
     depends_on:
-      rabbitmq:
+      destinations-service:
+        condition: service_healthy
+      itinerary-service:
         condition: service_healthy
     restart: unless-stopped
     networks: [globetrotter]
 
-  gateway:
-    build:
-      context: .
-      dockerfile: services/gateway/Dockerfile
-    container_name: globetrotter-gateway
-    ports:
-      - "4000:4000"
+  chatbot-service:
+    build: ./services/chatbot-service
+    container_name: globetrotter-chatbot-service
     environment:
-      - PORT=4000
+      - PORT=4006
       - CORS_ORIGIN=*
-      - USER_SERVICE_URL=http://user-service:4001
-      - ITINERARY_SERVICE_URL=http://itinerary-service:4002
-      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:4003
-      - GOOGLE_MAPS_EMBED_KEY=${GOOGLE_MAPS_EMBED_KEY:-}
+      - SEARCH_SERVICE_URL=http://search-service:4003
+      - OPENROUTER_API_KEY=${CHATBOT_OPENROUTER_API_KEY:-${OPENROUTER_API_KEY:-}}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-meta-llama/llama-3.3-70b-instruct:free}
     depends_on:
-      - user-service
-      - itinerary-service
-      - recommendation-service
+      search-service:
+        condition: service_healthy
     restart: unless-stopped
     networks: [globetrotter]
 

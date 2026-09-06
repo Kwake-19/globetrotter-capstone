@@ -185,5 +185,40 @@
     btn.disabled = true;
   });
 
+  /** "From people you follow" - destinations reviewed / trip-added by accounts you follow. */
+  async function loadFollowStrip() {
+    const strip = document.getElementById('followStrip');
+    if (!strip) return;
+    let data;
+    try {
+      data = await GT.api('/recommendations');
+    } catch (err) {
+      return;
+    }
+    const items = (data && data.fromFollowing) || [];
+    if (!items.length) return;
+
+    strip.innerHTML = `
+      <h2 class="follow-strip__title">From people you follow</h2>
+      <div class="follow-strip__row">
+        ${items.map((place) => {
+          const who = place.followedBy[0];
+          const more = place.followedBy.length > 1 ? ` +${place.followedBy.length - 1}` : '';
+          const verb = who.action === 'reviewed' ? 'reviewed by' : 'added by';
+          return `
+            <a class="follow-strip__card" href="/place.html?id=${encodeURIComponent(place.id)}">
+              ${GT.renderPlaceImage(place, 'follow-strip__img')}
+              <div class="follow-strip__body">
+                <span class="follow-strip__name">${GT.escapeHtml(place.name)}</span>
+                <span class="follow-strip__who">${verb} @${GT.escapeHtml(who.username || '')}${more}</span>
+              </div>
+            </a>`;
+        }).join('')}
+      </div>
+    `;
+    strip.classList.remove('hidden');
+  }
+
+  loadFollowStrip();
   loadPlaces();
 })();

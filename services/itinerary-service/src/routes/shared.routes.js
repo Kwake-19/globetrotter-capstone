@@ -1,13 +1,13 @@
 const express = require('express');
 const { readDB } = require('../utils/dataStore');
-const { fetchAllDestinations } = require('../utils/recommendationClient');
+const { fetchDestinations } = require('../utils/destinationsClient');
 
 const router = express.Router();
 
-// GET /api/shared/:shareId - anyone with the link can view (read-only),
-// no authentication required. Enriching each stop with its destination
-// details is a synchronous REST call to the Recommendation Service, since
-// this service no longer owns destination data.
+// GET /api/shared/:shareId - anyone with the link can view (read-only), no
+// authentication. Relocated from the monolith; the only change is that the
+// per-stop destination details are fetched from destinations-service
+// rather than read off the local db.
 router.get('/:shareId', async (req, res, next) => {
   try {
     const db = await readDB();
@@ -16,7 +16,13 @@ router.get('/:shareId', async (req, res, next) => {
       return res.status(404).json({ error: 'Shared itinerary not found' });
     }
 
-    const destinations = await fetchAllDestinations();
+    let destinations;
+    try {
+      destinations = await fetchDestinations();
+    } catch (err) {
+      return res.status(503).json({ error: 'This shared itinerary is temporarily unavailable - please try again shortly' });
+    }
+
     const destinationsById = Object.fromEntries(destinations.map((d) => [d.id, d]));
     const items = itinerary.items
       .slice()
