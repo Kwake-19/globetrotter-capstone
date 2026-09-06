@@ -22,11 +22,17 @@
 
   async function handleCredentialResponse(response) {
     try {
+      // Both login.html and signup.html carry the same #rememberMe
+      // checkbox; default to remembering if a page somehow doesn't have
+      // one rather than surprising the user with a same-session-only login.
+      const rememberMeInput = document.getElementById('rememberMe');
+      const rememberMe = rememberMeInput ? rememberMeInput.checked : true;
+
       const data = await GT.api('/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ idToken: response.credential })
+        body: JSON.stringify({ idToken: response.credential, rememberMe })
       });
-      GT.setAuth(data.token, data.user);
+      GT.setAuth(data.token, data.user, rememberMe);
       window.location.href = '/app.html';
     } catch (err) {
       showError(err.message);

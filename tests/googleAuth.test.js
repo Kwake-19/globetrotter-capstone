@@ -1,4 +1,5 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const { createTestApp, registerUser } = require('./helpers/testApp');
 
 // Never call real Google servers in tests - replace the OAuth2Client
@@ -159,6 +160,19 @@ describe('Google Sign-In', () => {
 
       expect(second.status).toBe(200);
       expect(second.body.user.id).toBe(first.body.user.id);
+    });
+
+    it('respects rememberMe for the issued token\'s lifetime, same as password login', async () => {
+      mockVerifyIdToken.mockResolvedValueOnce(googleTicket({
+        sub: 'google-sub-remember-1',
+        email: 'remember-google@example.com',
+        name: 'Remember Google'
+      }));
+
+      const res = await request(app).post('/api/auth/google').send({ idToken: 'valid-token', rememberMe: true });
+
+      const decoded = jwt.decode(res.body.token);
+      expect(decoded.exp - decoded.iat).toBe(30 * 24 * 60 * 60);
     });
 
     it('rejects a token payload with no email with 401', async () => {

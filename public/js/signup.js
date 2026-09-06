@@ -4,6 +4,7 @@
   const form = document.getElementById('signupForm');
   const formError = document.getElementById('formError');
   const submitBtn = document.getElementById('submitBtn');
+  const rememberMeInput = document.getElementById('rememberMe');
 
   const fields = {
     name: document.getElementById('name'),
@@ -54,6 +55,7 @@
 
     submitBtn.disabled = true;
     try {
+      const rememberMe = rememberMeInput.checked;
       const data = await GT.api('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
@@ -62,10 +64,11 @@
           email: fields.email.value.trim(),
           password: fields.password.value,
           phone: fields.phone.value.trim(),
-          homeCity: fields.homeCity.value.trim()
+          homeCity: fields.homeCity.value.trim(),
+          rememberMe
         })
       });
-      GT.setAuth(data.token, data.user);
+      GT.setAuth(data.token, data.user, rememberMe);
       window.location.href = '/app.html';
     } catch (err) {
       formError.textContent = err.message;

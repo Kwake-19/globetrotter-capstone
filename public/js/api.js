@@ -30,22 +30,53 @@
   }
 
   // ---- auth / api ---------------------------------------------------------
+  // "Remember me on this device" controls WHERE the token lives, not just
+  // how long it's valid for (see src/routes/auth.routes.js's signToken):
+  // localStorage survives closing the browser, sessionStorage is cleared
+  // as soon as the tab/window closes. Only one of the two should ever hold
+  // a token at a time; getToken()/getUser() check both since a page load
+  // doesn't otherwise know which one a previous login chose.
   function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
   }
 
   function getUser() {
-    try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) { return null; }
+    try {
+      const raw = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
+      return JSON.parse(raw || 'null');
+    } catch (e) {
+      return null;
+    }
   }
 
-  function setAuth(token, user) {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  /** Was the current session stored as "remembered" (localStorage) rather than session-only? */
+  function wasRemembered() {
+    return !!localStorage.getItem(TOKEN_KEY);
+  }
+
+  /**
+   * `rememberMe` picks the storage: true -> localStorage (persists across
+   * browser restarts), false -> sessionStorage (gone once the tab/browser
+   * closes). Omit it (e.g. when just refreshing the cached user object
+   * after a profile edit, not a fresh login) to keep whatever the current
+   * session is already using.
+   */
+  function setAuth(token, user, rememberMe) {
+    const remember = rememberMe === undefined ? wasRemembered() : !!rememberMe;
+    const store = remember ? localStorage : sessionStorage;
+    const other = remember ? sessionStorage : localStorage;
+
+    other.removeItem(TOKEN_KEY);
+    other.removeItem(USER_KEY);
+    store.setItem(TOKEN_KEY, token);
+    store.setItem(USER_KEY, JSON.stringify(user));
   }
 
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
     window.location.href = '/login.html';
   }
 
@@ -280,6 +311,7 @@
     getToken,
     getUser,
     setAuth,
+    wasRemembered,
     logout,
     getCurrentPosition,
     requireAuthOrRedirect,

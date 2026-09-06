@@ -5,6 +5,7 @@
   const formError = document.getElementById('formError');
   const identifierInput = document.getElementById('identifier');
   const passwordInput = document.getElementById('password');
+  const rememberMeInput = document.getElementById('rememberMe');
   const identifierError = document.getElementById('identifierError');
   const passwordError = document.getElementById('passwordError');
   const submitBtn = document.getElementById('submitBtn');
@@ -41,14 +42,16 @@
 
     submitBtn.disabled = true;
     try {
+      const rememberMe = rememberMeInput.checked;
       const data = await GT.api('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           identifier: identifierInput.value.trim(),
-          password: passwordInput.value
+          password: passwordInput.value,
+          rememberMe
         })
       });
-      GT.setAuth(data.token, data.user);
+      GT.setAuth(data.token, data.user, rememberMe);
       window.location.href = redirectTarget();
     } catch (err) {
       formError.textContent = err.message;

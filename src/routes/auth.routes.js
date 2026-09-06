@@ -15,11 +15,19 @@ function isValidUsername(username) {
   return typeof username === 'string' && username.trim().length >= 3 && username.trim().length <= 30;
 }
 
-function signToken(user) {
+// "Remember me" doesn't add server-side sessions/refresh tokens (this app
+// is stateless JWT-only) - it just issues a longer-lived token when asked,
+// and the frontend chooses where to store it (localStorage, so it survives
+// closing the browser, vs sessionStorage otherwise) to match. See
+// public/js/api.js's setAuth/getToken.
+function signToken(user, rememberMe) {
+  const expiresIn = rememberMe
+    ? (process.env.JWT_REMEMBER_EXPIRES_IN || '30d')
+    : (process.env.JWT_EXPIRES_IN || '7d');
   return jwt.sign(
     { sub: user.id, name: user.name, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn }
   );
 }
 
@@ -49,7 +57,7 @@ function generateUsernameFromEmail(email, existingUsernamesLower) {
 // POST /api/auth/register
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, username, email, password, phone, homeCity } = req.body || {};
+    const { name, username, email, password, phone, homeCity, rememberMe } = req.body || {};
 
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'name is required' });
@@ -94,7 +102,7 @@ router.post('/register', async (req, res, next) => {
     db.users.push(newUser);
     await writeDB(db);
 
-    const token = signToken(newUser);
+    const token = signToken(newUser, rememberMe);
     return res.status(201).json({ token, user: toPublicUser(newUser) });
   } catch (err) {
     return next(err);
@@ -104,7 +112,7 @@ router.post('/register', async (req, res, next) => {
 // POST /api/auth/login
 router.post('/login', async (req, res, next) => {
   try {
-    const { identifier, password } = req.body || {};
+    const { identifier, password, rememberMe } = req.body || {};
     if (!identifier || typeof identifier !== 'string' || !password) {
       return res.status(400).json({ error: 'identifier and password are required' });
     }
@@ -130,7 +138,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = signToken(user);
+    const token = signToken(user, rememberMe);
     return res.json({ token, user: toPublicUser(user) });
   } catch (err) {
     return next(err);
@@ -147,7 +155,7 @@ router.post('/login', async (req, res, next) => {
 // by email) or creates a new passwordless one.
 router.post('/google', async (req, res, next) => {
   try {
-    const { idToken } = req.body || {};
+    const { idToken, rememberMe } = req.body || {};
     if (!idToken || typeof idToken !== 'string') {
       return res.status(400).json({ error: 'idToken is required' });
     }
@@ -211,7 +219,7 @@ router.post('/google', async (req, res, next) => {
       isNewUser = true;
     }
 
-    const token = signToken(user);
+    const token = signToken(user, rememberMe);
     return res.status(isNewUser ? 201 : 200).json({ token, user: toPublicUser(user) });
   } catch (err) {
     return next(err);

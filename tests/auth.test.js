@@ -1,4 +1,5 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const { createTestApp, registerUser } = require('./helpers/testApp');
 
 describe('Auth', () => {
@@ -103,6 +104,39 @@ describe('Auth', () => {
         .send({ identifier: 'nobody@example.com', password: 'whatever123' });
 
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('"Remember me" token lifetime', () => {
+    it('issues the default-length token when rememberMe is omitted', async () => {
+      const { credentials } = await registerUser(app, { email: 'remember-default@example.com' });
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ identifier: credentials.email, password: credentials.password });
+
+      const decoded = jwt.decode(res.body.token);
+      // testApp.js sets JWT_EXPIRES_IN='1h'.
+      expect(decoded.exp - decoded.iat).toBe(60 * 60);
+    });
+
+    it('issues a longer-lived token when rememberMe is true', async () => {
+      const { credentials } = await registerUser(app, { email: 'remember-yes@example.com' });
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ identifier: credentials.email, password: credentials.password, rememberMe: true });
+
+      const decoded = jwt.decode(res.body.token);
+      // JWT_REMEMBER_EXPIRES_IN isn't set in the test env, so this exercises the '30d' default.
+      expect(decoded.exp - decoded.iat).toBe(30 * 24 * 60 * 60);
+    });
+
+    it('also applies to a fresh registration', async () => {
+      const { res } = await registerUser(app, { email: 'remember-register@example.com', rememberMe: true });
+
+      const decoded = jwt.decode(res.body.token);
+      expect(decoded.exp - decoded.iat).toBe(30 * 24 * 60 * 60);
     });
   });
 });
